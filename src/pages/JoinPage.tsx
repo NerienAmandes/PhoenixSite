@@ -1,0 +1,183 @@
+import { useState } from 'react'
+import { vacancies } from '../data/vacancies'
+import VacancyItem from '../components/VacancyItem'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useAuthStore } from '../store/useAuthStore'
+import { useSubmissionsStore } from '../store/useSubmissionsStore'
+import { useNavigate, Link } from 'react-router-dom'
+import { Check, ArrowUpRight, Megaphone } from 'lucide-react'
+import { isValidEmail, isValidName } from '../utils/validators'
+
+export default function JoinPage() {
+  useDocumentTitle('Набор')
+  const user = useAuthStore((s) => s.user)
+  const addSubmission = useSubmissionsStore((s) => s.add)
+  const navigate = useNavigate()
+
+  const [form, setForm] = useState({
+    name: user?.name ?? '',
+    contact: user?.email ?? '',
+    age: '',
+    experience: '',
+    portfolio: '',
+    role: vacancies[0].id,
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [success, setSuccess] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const next: Record<string, string> = {}
+    if (!isValidName(form.name)) next.name = 'Укажите имя'
+    if (!isValidEmail(form.contact)) next.contact = 'Похоже, e-mail некорректен'
+    if (!form.age) next.age = 'Укажите возраст'
+    if (form.experience.trim().length < 3) next.experience = 'Расскажите коротко об опыте'
+    setErrors(next)
+    if (Object.keys(next).length > 0) return
+
+    if (!user) {
+      navigate('/register', { state: { from: '/join' } })
+      return
+    }
+
+    addSubmission({
+      userId: user.id,
+      type: 'join',
+      payload: form,
+    })
+    setSuccess(true)
+    setForm({ name: user.name, contact: user.email, age: '', experience: '', portfolio: '', role: vacancies[0].id })
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+      <div className="reveal reveal-1">
+        <span className="tag"><Megaphone size={12} /> Набор 2026</span>
+      </div>
+      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[0.95]">
+        Ищем
+        <br />
+        <span className="text-fire">единомышленников</span>
+      </h1>
+      <p className="reveal reveal-3 mt-6 max-w-2xl text-lg text-muted">
+        Если ты горишь живой музыкой так же, как мы — оставь отклик. Возможно,
+        именно ты станешь частью FirePhoenix.
+      </p>
+
+      <div className="mt-12 grid gap-4">
+        {vacancies.map((v, i) => (
+          <VacancyItem key={v.id} vacancy={v} index={i} />
+        ))}
+      </div>
+
+      <div className="mt-20 grid gap-8 lg:grid-cols-12 items-start">
+        <div className="lg:col-span-5">
+          <h2 className="font-display text-4xl sm:text-5xl">Откликнуться</h2>
+          <p className="mt-4 text-muted max-w-md">
+            Расскажите немного о себе и пришлите ссылку на портфолио. Мы
+            свяжемся с вами, если увидим совпадение.
+          </p>
+          <div className="mt-6 surface-soft p-5 text-sm">
+            <div className="text-[10px] tracking-[0.3em] uppercase text-muted mb-2">
+              Что мы ценим
+            </div>
+            <ul className="grid gap-1.5">
+              <li>· Любовь к живым выступлениям</li>
+              <li>· Ответственность и пунктуальность</li>
+              <li>· Умение слышать коллег</li>
+              <li>· Готовность расти вместе</li>
+            </ul>
+          </div>
+          {!user && (
+            <div className="mt-6 text-sm text-muted">
+              Уже есть аккаунт? <Link to="/login" className="text-accent hover:underline">Войдите</Link>
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="lg:col-span-7 surface p-7 sm:p-9 sticky top-24">
+          {success && (
+            <div className="mb-6 surface-soft p-4 text-sm flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-fire flex items-center justify-center text-white shrink-0">
+                <Check size={14} strokeWidth={3} />
+              </div>
+              <div>
+                <div className="font-medium">Отклик отправлен!</div>
+                <div className="text-muted">Спасибо! Мы рассмотрим вашу заявку в ближайшие дни.</div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Имя</label>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Иван Петров"
+                className="mt-2"
+              />
+              {errors.name && <p className="mt-1.5 text-xs text-accent">{errors.name}</p>}
+            </div>
+            <div>
+              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">E-mail или Telegram</label>
+              <input
+                value={form.contact}
+                onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                placeholder="hello@example.com"
+                className="mt-2"
+              />
+              {errors.contact && <p className="mt-1.5 text-xs text-accent">{errors.contact}</p>}
+            </div>
+            <div>
+              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Возраст</label>
+              <input
+                value={form.age}
+                onChange={(e) => setForm({ ...form, age: e.target.value })}
+                placeholder="25"
+                className="mt-2"
+              />
+              {errors.age && <p className="mt-1.5 text-xs text-accent">{errors.age}</p>}
+            </div>
+            <div>
+              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Вакансия</label>
+              <select
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                className="mt-2"
+              >
+                {vacancies.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.role}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Опыт</label>
+              <textarea
+                value={form.experience}
+                onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                placeholder="Где играли, на каких площадках, в каких коллективах..."
+                className="mt-2"
+              />
+              {errors.experience && <p className="mt-1.5 text-xs text-accent">{errors.experience}</p>}
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Ссылка на портфолио</label>
+              <input
+                value={form.portfolio}
+                onChange={(e) => setForm({ ...form, portfolio: e.target.value })}
+                placeholder="https://soundcloud.com/... или YouTube"
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <button type="submit" className="btn btn-primary mt-6 w-full sm:w-auto">
+            Отправить отклик <ArrowUpRight size={14} />
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
