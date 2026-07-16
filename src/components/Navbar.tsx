@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
-import { useAuthStore } from '../store/useAuthStore'
 
 const links = [
   { to: '/', label: 'Главная' },
@@ -15,9 +14,6 @@ const links = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
-  const location = useLocation()
-  const user = useAuthStore((s) => s.user)
-  const logout = useAuthStore((s) => s.logout)
 
   return (
     <header
@@ -59,31 +55,6 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <div className="hidden md:flex items-center gap-2">
-              {user ? (
-                <>
-                  <Link to="/profile" className="btn btn-ghost">
-                    {user.name.split(' ')[0]}
-                  </Link>
-                  <button onClick={logout} className="btn btn-outline">
-                    Выйти
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    state={{ from: location.pathname }}
-                    className="btn btn-ghost"
-                  >
-                    Войти
-                  </Link>
-                  <Link to="/register" className="btn btn-primary">
-                    Регистрация
-                  </Link>
-                </>
-              )}
-            </div>
             <button
               onClick={() => setOpen((v) => !v)}
               className="lg:hidden btn btn-icon btn-outline"
@@ -112,44 +83,6 @@ export default function Navbar() {
                   {l.label}
                 </NavLink>
               ))}
-              <div className="border-t border-border my-2" />
-              {user ? (
-                <>
-                  <Link
-                    to="/profile"
-                    onClick={() => setOpen(false)}
-                    className="px-4 py-3.5 rounded-xl text-base text-ink"
-                  >
-                    Личный кабинет
-                  </Link>
-                  <button
-                    onClick={() => {
-                      logout()
-                      setOpen(false)
-                    }}
-                    className="px-4 py-3.5 rounded-xl text-base text-left text-ink"
-                  >
-                    Выйти
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    onClick={() => setOpen(false)}
-                    className="px-4 py-3.5 rounded-xl text-base text-ink"
-                  >
-                    Войти
-                  </Link>
-                  <Link
-                    to="/register"
-                    onClick={() => setOpen(false)}
-                    className="px-4 py-3.5 rounded-xl text-base text-accent"
-                  >
-                    Регистрация
-                  </Link>
-                </>
-              )}
             </div>
           </div>
         )}

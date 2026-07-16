@@ -34,3 +34,7 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Deploy scripts (run locally, not in repo)
+deploy-*.ps1
+deploy-*.bat
