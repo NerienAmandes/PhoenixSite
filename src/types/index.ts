@@ -60,7 +60,7 @@ export interface User {
 
 export interface Submission {
   id: string
-  userId: string
+  userId?: string
   type: 'service' | 'join'
   payload: Record<string, string>
   createdAt: string

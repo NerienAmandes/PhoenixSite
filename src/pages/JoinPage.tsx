@@ -4,7 +4,6 @@ import VacancyItem from '../components/VacancyItem'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useAuthStore } from '../store/useAuthStore'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
-import { useNavigate } from 'react-router-dom'
 import { Check, ArrowUpRight, Megaphone, Loader2 } from 'lucide-react'
 import { isValidEmail, isValidName, isValidBirthDate } from '../utils/validators'
 
@@ -12,7 +11,6 @@ export default function JoinPage() {
   useDocumentTitle('Набор')
   const user = useAuthStore((s) => s.user)
   const addSubmission = useSubmissionsStore((s) => s.add)
-  const navigate = useNavigate()
 
   const [form, setForm] = useState({
     name: user?.name ?? '',
@@ -38,11 +36,6 @@ export default function JoinPage() {
     setErrors(next)
     if (Object.keys(next).length > 0) return
 
-    if (!user) {
-      navigate('/register', { state: { from: '/join' } })
-      return
-    }
-
     setLoading(true)
     try {
       // Попробуем отправить в Telegram через API
@@ -64,13 +57,13 @@ export default function JoinPage() {
     }
 
     addSubmission({
-      userId: user.id,
+      userId: user?.id,
       type: 'join',
       payload: form,
     })
     setSuccess(true)
     setLoading(false)
-    setForm({ name: user.name, contact: user.email, birthDate: '', experience: '', portfolio: '', role: vacancies[0].id })
+    setForm({ name: user?.name ?? '', contact: user?.email ?? '', birthDate: '', experience: '', portfolio: '', role: vacancies[0].id })
   }
 
   return (

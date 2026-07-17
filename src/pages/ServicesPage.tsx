@@ -14,7 +14,6 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { isValidEmail, isValidName } from '../utils/validators'
-import { useNavigate } from 'react-router-dom'
 
 const priceTable = [
   { size: 'TV-size', duration: 'до 2-х минут', price: 'от 500 ₽', japanese: 'от 700 ₽' },
@@ -41,7 +40,6 @@ export default function ServicesPage() {
   useDocumentTitle('Услуги')
   const user = useAuthStore((s) => s.user)
   const addSubmission = useSubmissionsStore((s) => s.add)
-  const navigate = useNavigate()
 
   const [form, setForm] = useState({
     name: user?.name ?? '',
@@ -63,18 +61,13 @@ export default function ServicesPage() {
     setErrors(next)
     if (Object.keys(next).length > 0) return
 
-    if (!user) {
-      navigate('/register', { state: { from: '/services' } })
-      return
-    }
-
     addSubmission({
-      userId: user.id,
+      userId: user?.id,
       type: 'service',
       payload: form,
     })
     setSuccess(true)
-    setForm({ name: user.name, contact: user.email, track: '', package: services[0].id, comment: '' })
+    setForm({ name: user?.name ?? '', contact: user?.email ?? '', track: '', package: services[0].id, comment: '' })
   }
 
   return (
@@ -275,7 +268,7 @@ export default function ServicesPage() {
               </div>
               <div>
                 <div className="font-medium">Заявка отправлена!</div>
-                <div className="text-muted">Мы свяжемся с вами в ближайшее время. Заявка появится в личном кабинете.</div>
+                <div className="text-muted">Мы свяжемся с вами в ближайшее время по указанным контактам.</div>
               </div>
             </div>
           )}

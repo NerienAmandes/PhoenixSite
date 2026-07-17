@@ -40,7 +40,7 @@ export const upcomingReleases: Release[] = [
     status: 'upcoming',
     platforms: {},
     description: 'Описание готовится.',
-    currentStage: 0,
+    currentStage: 10,
   },
   {
     id: 'u3',
@@ -51,7 +51,7 @@ export const upcomingReleases: Release[] = [
     status: 'upcoming',
     platforms: {},
     description: 'Описание готовится.',
-    currentStage: 0,
+    currentStage: 10,
   },
   {
     id: 'u4',
@@ -62,7 +62,7 @@ export const upcomingReleases: Release[] = [
     status: 'upcoming',
     platforms: {},
     description: 'Описание готовится.',
-    currentStage: 0,
+    currentStage: 11,
   },
 ]
 
