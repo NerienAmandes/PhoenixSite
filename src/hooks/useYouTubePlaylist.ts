@@ -31,9 +31,16 @@ export function useYouTubePlaylist() {
           `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&key=${apiKey}&maxResults=50`
         )
         if (!res.ok) {
+          const errData = await res.json().catch(() => null)
+          console.error('YouTube API вернул ошибку:', res.status, errData)
           throw new Error(`Ошибка YouTube API: ${res.status}`)
         }
         const data = await res.json()
+
+        if (!data.items || data.items.length === 0) {
+          console.warn('YouTube плейлист пуст — используем статические данные')
+          throw new Error('Плейлист пуст')
+        }
 
         const items: YouTubePlaylistItem[] = data.items.map((item: any) => {
           const title = item.snippet.title
@@ -56,8 +63,10 @@ export function useYouTubePlaylist() {
 
         setVideos(items)
       } catch (err) {
-        console.error('Ошибка загрузки YouTube:', err)
-        setError('Не удалось загрузить видео из YouTube')
+        console.warn('Не удалось загрузить YouTube, используем статические данные:', err)
+        // НЕ показываем ошибку — лучше упасть на статические данные
+        setError(null)
+        setVideos([])
       } finally {
         setLoading(false)
       }
