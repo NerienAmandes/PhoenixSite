@@ -5,7 +5,22 @@
 @font-face {
   font-family: 'Podarok';
   src: local('Podarok'),
-       local('Podarok-Regular');
+       local('Podarok-Regular'),
+       url('/fonts/Podarok-Regular.woff2') format('woff2'),
+       url('/fonts/Podarok-Regular.woff') format('woff'),
+       url('/fonts/Podarok-Regular.ttf') format('truetype');
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Coolvetica';
+  src: local('Coolvetica'),
+       local('Coolvetica-Regular'),
+       url('/fonts/Coolvetica-Regular.woff2') format('woff2'),
+       url('/fonts/Coolvetica-Regular.woff') format('woff'),
+       url('/fonts/Coolvetica-Regular.ttf') format('truetype');
   font-display: swap;
   font-weight: 400;
   font-style: normal;
@@ -161,7 +176,11 @@ textarea {
   background: var(--gradient-fire);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
+  /* Защита от обрезки descender у букв вроде у, ц, щ */
+  padding-bottom: 0.08em;
+  display: inline-block;
 }
 
 /* Card surface */
