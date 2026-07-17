@@ -5,7 +5,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useAuthStore } from '../store/useAuthStore'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
 import { useNavigate, Link } from 'react-router-dom'
-import { Check, ArrowUpRight, Megaphone } from 'lucide-react'
+import { Check, ArrowUpRight, Megaphone, Loader2 } from 'lucide-react'
 import { isValidEmail, isValidName } from '../utils/validators'
 
 export default function JoinPage() {
@@ -24,9 +24,12 @@ export default function JoinPage() {
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setApiError(null)
     const next: Record<string, string> = {}
     if (!isValidName(form.name)) next.name = 'Укажите имя'
     if (!isValidEmail(form.contact)) next.contact = 'Похоже, e-mail некорректен'
@@ -40,12 +43,33 @@ export default function JoinPage() {
       return
     }
 
+    setLoading(true)
+    try {
+      // Попробуем отправить в Telegram через API
+      const res = await fetch('/api/send-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.contact,
+          instrument: form.role,
+          experience: form.experience,
+          message: `Возраст: ${form.age}, Портфолио: ${form.portfolio || 'Не указано'}`
+        })
+      })
+      if (!res.ok) throw new Error('Ошибка отправки в Telegram')
+    } catch (err) {
+      console.warn('Telegram API не настроен или не работает:', err)
+      // Продолжаем работу, даже если Telegram не настроен
+    }
+
     addSubmission({
       userId: user.id,
       type: 'join',
       payload: form,
     })
     setSuccess(true)
+    setLoading(false)
     setForm({ name: user.name, contact: user.email, age: '', experience: '', portfolio: '', role: vacancies[0].id })
   }
 
@@ -173,8 +197,17 @@ export default function JoinPage() {
               />
             </div>
           </div>
-          <button type="submit" className="btn btn-primary mt-6 w-full sm:w-auto">
-            Отправить отклик <ArrowUpRight size={14} />
+          <button type="submit" disabled={loading} className="btn btn-primary mt-6 w-full sm:w-auto">
+            {loading ? (
+              <>
+                <Loader2 size={14} className="animate-spin mr-2" />
+                Отправка...
+              </>
+            ) : (
+              <>
+                Отправить отклик <ArrowUpRight size={14} />
+              </>
+            )}
           </button>
         </form>
       </div>
