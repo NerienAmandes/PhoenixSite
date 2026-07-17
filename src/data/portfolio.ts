@@ -2,7 +2,7 @@ export type PortfolioItem = {
   id: string
   title: string
   youtubeId: string
-  type: 'cover' | 'live' | 'shorts'
+  type: 'cover'
 }
 
 // Замени youtubeId на реальные ID своих видео (часть ссылки после ?v= или youtu.be/)
@@ -27,18 +27,6 @@ export const portfolio: PortfolioItem[] = [
   },
   {
     id: 'p4',
-    title: 'Полымя — live на концерте',
-    youtubeId: 'dQw4w9WgXcQ',
-    type: 'live',
-  },
-  {
-    id: 'p5',
-    title: 'Шёпот Ливня — live-версия',
-    youtubeId: 'dQw4w9WgXcQ',
-    type: 'live',
-  },
-  {
-    id: 'p6',
     title: 'Backstage — запись с концерта',
     youtubeId: 'dQw4w9WgXcQ',
     type: 'cover',

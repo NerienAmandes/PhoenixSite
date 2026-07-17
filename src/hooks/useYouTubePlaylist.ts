@@ -4,7 +4,7 @@ interface YouTubePlaylistItem {
   id: string
   title: string
   youtubeId: string
-  type: 'cover' | 'live' | 'shorts'
+  type: 'cover'
   thumbnail: string
 }
 
@@ -43,20 +43,11 @@ export function useYouTubePlaylist() {
         }
 
         const items: YouTubePlaylistItem[] = data.items.map((item: any) => {
-          const title = item.snippet.title
-          // Определяем тип видео по названию или описанию (пример логики)
-          let type: 'cover' | 'live' | 'shorts' = 'cover'
-          if (title.toLowerCase().includes('live') || title.toLowerCase().includes('концерт')) {
-            type = 'live'
-          } else if (title.toLowerCase().includes('short') || title.toLowerCase().includes('шортс')) {
-            type = 'shorts'
-          }
-
           return {
             id: item.id,
-            title,
+            title: item.snippet.title,
             youtubeId: item.snippet.resourceId.videoId,
-            type,
+            type: 'cover' as const,
             thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
           }
         })

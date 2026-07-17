@@ -4,7 +4,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
 import { Youtube, Play, Loader2 } from 'lucide-react'
 
-type PortfolioFilter = 'all' | 'cover' | 'live'
+type PortfolioFilter = 'all' | 'cover'
 
 export default function ReleasesPage() {
   useDocumentTitle('Видео')
@@ -15,7 +15,7 @@ export default function ReleasesPage() {
   const portfolio = ytVideos.length > 0 ? ytVideos.map(vid => ({
     id: vid.id,
     title: vid.title,
-    type: vid.type === 'shorts' ? 'cover' : vid.type, // Преобразуем шортсы в каверы, если вдруг попадутся
+    type: 'cover' as const,
     youtubeId: vid.youtubeId
   })) : staticPortfolio
 
@@ -25,7 +25,6 @@ export default function ReleasesPage() {
   const pfTabs: { id: PortfolioFilter; label: string }[] = [
     { id: 'all', label: 'Все' },
     { id: 'cover', label: 'Каверы' },
-    { id: 'live', label: 'Live' },
   ]
 
   return (
@@ -100,8 +99,7 @@ export default function ReleasesPage() {
                   <div className="absolute top-3 left-3">
                     <span className="tag backdrop-blur-md bg-black/40 text-white border-white/20 text-[10px]">
                       <Youtube size={10} />
-                      {p.type === 'cover' && 'Кавер'}
-                      {p.type === 'live' && 'Live'}
+                      Кавер
                     </span>
                   </div>
                 </div>
