@@ -41,6 +41,6 @@ export const portfolio: PortfolioItem[] = [
     id: 'p6',
     title: 'Backstage — запись с концерта',
     youtubeId: 'dQw4w9WgXcQ',
-    type: 'shorts',
+    type: 'cover',
   },
 ]
