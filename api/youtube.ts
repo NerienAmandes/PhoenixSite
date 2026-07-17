@@ -24,10 +24,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await ytRes.json()
 
-    const items = (data.items || []).map((item: any) => ({
+    // Сортируем видео по дате публикации — новые сверху
+    const sortedItems = (data.items || []).slice().sort((a: any, b: any) => {
+      const dateA = new Date(a.snippet.publishedAt).getTime()
+      const dateB = new Date(b.snippet.publishedAt).getTime()
+      return dateB - dateA
+    })
+
+    const items = sortedItems.map((item: any) => ({
       id: item.id,
       title: item.snippet.title,
       youtubeId: item.snippet.resourceId.videoId,
+      publishedAt: item.snippet.publishedAt,
       thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url,
     }))
 
