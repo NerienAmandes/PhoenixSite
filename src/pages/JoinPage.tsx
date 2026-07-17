@@ -4,7 +4,7 @@ import VacancyItem from '../components/VacancyItem'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useAuthStore } from '../store/useAuthStore'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
-import { Check, ArrowUpRight, Megaphone, Loader2 } from 'lucide-react'
+import { Check, ArrowUpRight, Megaphone, Loader2, AlertCircle } from 'lucide-react'
 import { isValidEmail, isValidName, isValidBirthDate } from '../utils/validators'
 
 export default function JoinPage() {
@@ -19,6 +19,7 @@ export default function JoinPage() {
     experience: '',
     portfolio: '',
     role: vacancies[0].id,
+    website: '', // honeypot
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
@@ -28,6 +29,7 @@ export default function JoinPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setApiError(null)
+    setSuccess(false)
     const next: Record<string, string> = {}
     if (!isValidName(form.name)) next.name = 'Укажите имя'
     if (!isValidEmail(form.contact)) next.contact = 'Похоже, e-mail некорректен'
@@ -38,7 +40,6 @@ export default function JoinPage() {
 
     setLoading(true)
     try {
-      // Попробуем отправить в Telegram через API
       const res = await fetch('/api/send-telegram', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,23 +48,53 @@ export default function JoinPage() {
           email: form.contact,
           instrument: form.role,
           experience: form.experience,
-          message: `Дата рождения: ${form.birthDate}, Портфолио: ${form.portfolio || 'Не указано'}`
-        })
+          message: `Дата рождения: ${form.birthDate}, Портфолио: ${form.portfolio || 'Не указано'}`,
+          website: form.website, // honeypot
+        }),
       })
-      if (!res.ok) throw new Error('Ошибка отправки в Telegram')
+
+      if (!res.ok) {
+        let detail = ''
+        try {
+          const data = await res.json()
+          detail = data?.error ? ` — ${data.error}` : ''
+        } catch {
+          /* ignore */
+        }
+        throw new Error(`Ошибка отправки (${res.status})${detail}`)
+      }
     } catch (err) {
       console.warn('Telegram API не настроен или не работает:', err)
-      // Продолжаем работу, даже если Telegram не настроен
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Не удалось отправить отклик. Попробуйте позже или напишите нам напрямую.'
+      setApiError(message)
+      setLoading(false)
+      return
     }
 
-    addSubmission({
-      userId: user?.id,
-      type: 'join',
-      payload: form,
-    })
+    try {
+      addSubmission({
+        userId: user?.id,
+        type: 'join',
+        payload: form,
+      })
+    } catch (err) {
+      console.warn('addSubmission failed (не критично):', err)
+    }
+
     setSuccess(true)
     setLoading(false)
-    setForm({ name: user?.name ?? '', contact: user?.email ?? '', birthDate: '', experience: '', portfolio: '', role: vacancies[0].id })
+    setForm({
+      name: user?.name ?? '',
+      contact: user?.email ?? '',
+      birthDate: '',
+      experience: '',
+      portfolio: '',
+      role: vacancies[0].id,
+      website: '',
+    })
   }
 
   return (
@@ -116,6 +147,18 @@ export default function JoinPage() {
               <div>
                 <div className="font-medium">Отклик отправлен!</div>
                 <div className="text-muted">Спасибо! Мы рассмотрим вашу заявку в ближайшие дни.</div>
+              </div>
+            </div>
+          )}
+
+          {apiError && (
+            <div className="mb-6 surface-soft p-4 text-sm flex items-start gap-3 border border-red-300/40">
+              <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+                <AlertCircle size={14} />
+              </div>
+              <div>
+                <div className="font-medium">Ошибка отправки</div>
+                <div className="text-muted">{apiError}</div>
               </div>
             </div>
           )}
@@ -192,6 +235,17 @@ export default function JoinPage() {
                 className="mt-2"
               />
             </div>
+            {/* Honeypot — невидимое поле против ботов. Не удаляй! */}
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              value={form.website}
+              onChange={(e) => setForm({ ...form, website: e.target.value })}
+              className="hidden"
+              aria-hidden="true"
+            />
           </div>
           <button type="submit" disabled={loading} className="btn btn-primary mt-6 w-full sm:w-auto">
             {loading ? (
