@@ -68,7 +68,11 @@ export default function ReleasesPage() {
       )}
 
       {ytError && (
-        <div className="mt-4 text-red-500 text-sm">{ytError}</div>
+        <div className="mt-4 p-4 rounded-xl bg-red-100 border border-red-300 text-red-800 text-sm">
+          <strong>Ошибка YouTube API:</strong> {ytError}
+          <br />
+          <span className="text-xs opacity-70">Проверьте, что API ключ включён и плейлист публичный.</span>
+        </div>
       )}
 
       {!ytLoading && (

@@ -14,8 +14,8 @@ export function useYouTubePlaylist() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const apiKey = import.meta.env.YOUTUBE_API_KEY
-    const playlistId = import.meta.env.YOUTUBE_PLAYLIST_ID
+    const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY
+    const playlistId = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID
 
     if (!apiKey || !playlistId) {
       console.warn('YouTube API ключ или ID плейлиста не настроены — используем статические данные')
@@ -32,8 +32,10 @@ export function useYouTubePlaylist() {
         )
         if (!res.ok) {
           const errData = await res.json().catch(() => null)
-          console.error('YouTube API вернул ошибку:', res.status, errData)
-          throw new Error(`Ошибка YouTube API: ${res.status}`)
+          const errMsg = `YouTube API ${res.status}: ${errData?.error?.message || res.statusText}`
+          console.error('YouTube API вернул ошибку:', errMsg, errData)
+          setError(errMsg)
+          throw new Error(errMsg)
         }
         const data = await res.json()
 
