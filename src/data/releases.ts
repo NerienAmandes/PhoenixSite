@@ -5,48 +5,51 @@ const cover = (seed: string, hue: number) =>
     `Album cover art for a cover band called FirePhoenix, abstract fire, vinyl record vibe, dark moody with warm orange and red accents, song title ${seed}, cinematic, 4k`
   )}&image_size=square_hd`
 
+// Заглушки предстоящих релизов — заполни вручную (название, дату, ссылки, описание)
+export const upcomingReleases: Release[] = [
+  {
+    id: 'u1',
+    title: 'I Really Want to Stay At Your House',
+    originalArtist: "Rosa Walton (Let's Eat Grandma)",
+    cover: cover('I Really Want to Stay At Your House', 0),
+    releaseDate: '2026-09-01',
+    status: 'upcoming',
+    platforms: {},
+    description: 'Описание готовится.',
+  },
+  {
+    id: 'u2',
+    title: 'Back to Life',
+    originalArtist: 'HAN',
+    cover: cover('Back to Life', 60),
+    releaseDate: '2026-10-01',
+    status: 'upcoming',
+    platforms: {},
+    description: 'Описание готовится.',
+  },
+  {
+    id: 'u3',
+    title: 'Catch',
+    originalArtist: 'Yena',
+    cover: cover('Catch', 120),
+    releaseDate: '2026-11-01',
+    status: 'upcoming',
+    platforms: {},
+    description: 'Описание готовится.',
+  },
+  {
+    id: 'u4',
+    title: 'Test me!',
+    originalArtist: 'Xdinary Heroes',
+    cover: cover('Test me', 180),
+    releaseDate: '2026-12-01',
+    status: 'upcoming',
+    platforms: {},
+    description: 'Описание готовится.',
+  },
+]
+
 export const releases: Release[] = [
-  {
-    id: 'r1',
-    title: 'Пепел Слов',
-    originalArtist: 'Billie Eilish — Bury a Friend',
-    cover: cover('Пепел Слов', 0),
-    releaseDate: '2026-09-12',
-    status: 'upcoming',
-    platforms: {
-      youtube: 'https://youtube.com/',
-      spotify: 'https://open.spotify.com/',
-    },
-    description:
-      'Мрачная атмосфера оригинала в нашей русской интерпретации. Больше воздуха, живые барабаны, шёпот вокала на грани.',
-  },
-  {
-    id: 'r2',
-    title: 'Огни Над Рекой',
-    originalArtist: 'The Weeknd — Blinding Lights',
-    cover: cover('Огни Над Рекой', 30),
-    releaseDate: '2026-08-02',
-    status: 'upcoming',
-    platforms: {
-      spotify: 'https://open.spotify.com/',
-      yandex: 'https://music.yandex.ru/',
-    },
-    description:
-      'Синтвейв-энергия и ностальгия по летним ночным городам. Ближе к дебютному синглу сезона.',
-  },
-  {
-    id: 'r3',
-    title: 'Где Ты Сейчас',
-    originalArtist: 'Imagine Dragons — Believer',
-    cover: cover('Где Ты Сейчас', 60),
-    releaseDate: '2026-05-18',
-    status: 'upcoming',
-    platforms: {
-      youtube: 'https://youtube.com/',
-    },
-    description:
-      'Эмоциональный кавер с нарастающей кульминацией. Уже на финальной стадии сведения.',
-  },
   {
     id: 'r4',
     title: 'Не Отпускай',
