@@ -6,6 +6,19 @@ const cover = (seed: string, hue: number) =>
   )}&image_size=square_hd`
 
 // Заглушки предстоящих релизов — заполни вручную (название, дату, ссылки, описание)
+// currentStage: 0..11 — номер текущего этапа (0 = Текст готов ещё не сделан)
+//   0  Текст готов
+//   1  Записывается вокал
+//   2  Вокал готов
+//   3  Этап тюнотайма
+//   4  Тюнотайм готов
+//   5  Сведение
+//   6  Сведение готово
+//   7  Арт (если требуется)
+//   8  Арт готов
+//   9  Монтаж видео
+//  10  Видео готово
+//  11  Предстоящая дата релиза
 export const upcomingReleases: Release[] = [
   {
     id: 'u1',
@@ -16,6 +29,7 @@ export const upcomingReleases: Release[] = [
     status: 'upcoming',
     platforms: {},
     description: 'Описание готовится.',
+    currentStage: 0,
   },
   {
     id: 'u2',
@@ -26,6 +40,7 @@ export const upcomingReleases: Release[] = [
     status: 'upcoming',
     platforms: {},
     description: 'Описание готовится.',
+    currentStage: 0,
   },
   {
     id: 'u3',
@@ -36,6 +51,7 @@ export const upcomingReleases: Release[] = [
     status: 'upcoming',
     platforms: {},
     description: 'Описание готовится.',
+    currentStage: 0,
   },
   {
     id: 'u4',
@@ -46,6 +62,7 @@ export const upcomingReleases: Release[] = [
     status: 'upcoming',
     platforms: {},
     description: 'Описание готовится.',
+    currentStage: 0,
   },
 ]
 

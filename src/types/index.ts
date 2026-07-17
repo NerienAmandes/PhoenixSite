@@ -30,6 +30,7 @@ export interface Release {
   status: 'upcoming' | 'released'
   platforms: ReleasePlatforms
   description: string
+  currentStage?: number
 }
 
 export interface Service {
