@@ -14,8 +14,8 @@ export function useYouTubePlaylist() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY
-    const playlistId = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID
+    const apiKey = import.meta.env.YOUTUBE_API_KEY
+    const playlistId = import.meta.env.YOUTUBE_PLAYLIST_ID
 
     if (!apiKey || !playlistId) {
       console.warn('YouTube API ключ или ID плейлиста не настроены — используем статические данные')
