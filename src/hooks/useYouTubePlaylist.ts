@@ -17,9 +17,16 @@ export function useYouTubePlaylist() {
     const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY
     const playlistId = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID
 
+    console.log('[YouTube Debug] API Key:', apiKey ? `установлен (${apiKey.length} символов)` : 'НЕ НАЙДЕН')
+    console.log('[YouTube Debug] Playlist ID:', playlistId ? `установлен (${playlistId})` : 'НЕ НАЙДЕН')
+
     if (!apiKey || !playlistId) {
-      console.warn('YouTube API ключ или ID плейлиста не настроены — используем статические данные')
-      setError(null)
+      const missing = []
+      if (!apiKey) missing.push('VITE_YOUTUBE_API_KEY')
+      if (!playlistId) missing.push('VITE_YOUTUBE_PLAYLIST_ID')
+      const msg = `Не заданы переменные окружения: ${missing.join(', ')}. Проверьте Vercel → Settings → Environment Variables и сделайте Redeploy.`
+      console.warn(msg)
+      setError(msg)
       return
     }
 
