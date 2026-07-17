@@ -184,10 +184,7 @@ export default function AboutPage() {
       {/* What we do */}
       <section className="mt-20 sm:mt-28">
         <div className="reveal">
-          <span className="text-[10px] tracking-[0.3em] uppercase text-accent">
-            Деятельность
-          </span>
-          <h2 className="font-display text-4xl sm:text-6xl mt-2">
+          <h2 className="font-display text-4xl sm:text-6xl">
             Что мы <span className="text-fire">делаем</span>
           </h2>
         </div>
@@ -246,10 +243,7 @@ export default function AboutPage() {
       {/* Team roles */}
       <section className="mt-20 sm:mt-28">
         <div className="reveal">
-          <span className="text-[10px] tracking-[0.3em] uppercase text-accent">
-            Команда
-          </span>
-          <h2 className="font-display text-4xl sm:text-6xl mt-2">
+          <h2 className="font-display text-4xl sm:text-6xl">
             Наши <span className="text-fire">птички</span>
           </h2>
           <p className="mt-4 max-w-2xl text-base sm:text-lg text-muted">
@@ -281,10 +275,7 @@ export default function AboutPage() {
       {/* Timeline */}
       <section className="mt-20 sm:mt-28">
         <div className="reveal">
-          <span className="text-[10px] tracking-[0.3em] uppercase text-accent">
-            История
-          </span>
-          <h2 className="font-display text-4xl sm:text-6xl mt-2">
+          <h2 className="font-display text-4xl sm:text-6xl">
             Наш <span className="text-fire">путь</span>
           </h2>
         </div>
@@ -298,7 +289,7 @@ export default function AboutPage() {
                 style={{ animationDelay: `${i * 0.06}s` }}
               >
                 <div
-                  className={`absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center font-display text-sm text-white ${
+                  className={`absolute left-0 top-2 w-10 h-10 rounded-full flex items-center justify-center font-display text-sm text-white ${
                     m.isCurrent ? 'bg-fire shadow-glow' : 'bg-fire/85'
                   }`}
                 >
@@ -352,10 +343,7 @@ export default function AboutPage() {
       {/* Socials */}
       <section className="mt-20 sm:mt-28">
         <div className="reveal">
-          <span className="text-[10px] tracking-[0.3em] uppercase text-accent">
-            Связь
-          </span>
-          <h2 className="font-display text-4xl sm:text-6xl mt-2">
+          <h2 className="font-display text-4xl sm:text-6xl">
             Мы в <span className="text-fire">соцсетях</span>
           </h2>
           <p className="mt-4 max-w-2xl text-base sm:text-lg text-muted">
