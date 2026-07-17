@@ -4,9 +4,9 @@ import VacancyItem from '../components/VacancyItem'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useAuthStore } from '../store/useAuthStore'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Check, ArrowUpRight, Megaphone, Loader2 } from 'lucide-react'
-import { isValidEmail, isValidName } from '../utils/validators'
+import { isValidEmail, isValidName, isValidBirthDate } from '../utils/validators'
 
 export default function JoinPage() {
   useDocumentTitle('Набор')
@@ -17,7 +17,7 @@ export default function JoinPage() {
   const [form, setForm] = useState({
     name: user?.name ?? '',
     contact: user?.email ?? '',
-    age: '',
+    birthDate: '',
     experience: '',
     portfolio: '',
     role: vacancies[0].id,
@@ -33,7 +33,7 @@ export default function JoinPage() {
     const next: Record<string, string> = {}
     if (!isValidName(form.name)) next.name = 'Укажите имя'
     if (!isValidEmail(form.contact)) next.contact = 'Похоже, e-mail некорректен'
-    if (!form.age) next.age = 'Укажите возраст'
+    if (!isValidBirthDate(form.birthDate)) next.birthDate = 'Укажите дату в формате ДД.ММ.ГГГГ'
     if (form.experience.trim().length < 3) next.experience = 'Расскажите коротко об опыте'
     setErrors(next)
     if (Object.keys(next).length > 0) return
@@ -54,7 +54,7 @@ export default function JoinPage() {
           email: form.contact,
           instrument: form.role,
           experience: form.experience,
-          message: `Возраст: ${form.age}, Портфолио: ${form.portfolio || 'Не указано'}`
+          message: `Дата рождения: ${form.birthDate}, Портфолио: ${form.portfolio || 'Не указано'}`
         })
       })
       if (!res.ok) throw new Error('Ошибка отправки в Telegram')
@@ -70,7 +70,7 @@ export default function JoinPage() {
     })
     setSuccess(true)
     setLoading(false)
-    setForm({ name: user.name, contact: user.email, age: '', experience: '', portfolio: '', role: vacancies[0].id })
+    setForm({ name: user.name, contact: user.email, birthDate: '', experience: '', portfolio: '', role: vacancies[0].id })
   }
 
   return (
@@ -112,11 +112,6 @@ export default function JoinPage() {
               <li>· Готовность расти вместе</li>
             </ul>
           </div>
-          {!user && (
-            <div className="mt-6 text-sm text-muted">
-              Уже есть аккаунт? <Link to="/login" className="text-accent hover:underline">Войдите</Link>
-            </div>
-          )}
         </div>
 
         <form onSubmit={handleSubmit} className="lg:col-span-7 surface p-7 sm:p-9 sticky top-24">
@@ -154,14 +149,22 @@ export default function JoinPage() {
               {errors.contact && <p className="mt-1.5 text-xs text-accent">{errors.contact}</p>}
             </div>
             <div>
-              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Возраст</label>
+              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Дата рождения</label>
               <input
-                value={form.age}
-                onChange={(e) => setForm({ ...form, age: e.target.value })}
-                placeholder="25"
+                value={form.birthDate}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+                  let formatted = digits
+                  if (digits.length > 2) formatted = `${digits.slice(0, 2)}.${digits.slice(2)}`
+                  if (digits.length > 4) formatted = `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`
+                  setForm({ ...form, birthDate: formatted })
+                }}
+                placeholder="ДД.ММ.ГГГГ"
+                inputMode="numeric"
+                maxLength={10}
                 className="mt-2"
               />
-              {errors.age && <p className="mt-1.5 text-xs text-accent">{errors.age}</p>}
+              {errors.birthDate && <p className="mt-1.5 text-xs text-accent">{errors.birthDate}</p>}
             </div>
             <div>
               <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Вакансия</label>

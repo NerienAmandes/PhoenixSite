@@ -14,11 +14,11 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { isValidEmail, isValidName } from '../utils/validators'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 const priceTable = [
   { size: 'TV-size', duration: 'до 2-х минут', price: 'от 500 ₽', japanese: 'от 700 ₽' },
-  { size: 'Full-size', duration: 'от 2-х до 4-х минут', price: 'от 1 000 ₽', japanese: 'от 1 200 ₽' },
+  { size: 'Full-size', duration: 'от 2-х до 4-х минут', price: 'от 1 000 ₽', japanese: 'от 1 400 ₽' },
   { size: 'Длинные треки', duration: 'от 4-х минут', price: '+100 ₽ / мин', japanese: 'по стандартной сетке' },
 ]
 
@@ -262,11 +262,6 @@ export default function ServicesPage() {
               <li>4. Передаём финальный текст</li>
             </ol>
           </div>
-          {!user && (
-            <div className="mt-6 text-base text-muted">
-              Уже есть аккаунт? <Link to="/login" className="text-accent hover:underline">Войдите</Link>
-            </div>
-          )}
         </div>
 
         <form
