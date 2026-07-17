@@ -38,9 +38,9 @@ const STAGE_ICONS: Record<CoverStageId, LucideIcon> = {
 }
 
 const priceTable = [
-  { size: 'TV-size', duration: 'до 2-х минут', price: 'от 500 ₽', japanese: 'от 700 ₽' },
-  { size: 'Full-size', duration: 'от 2-х до 4-х минут', price: 'от 1 000 ₽', japanese: 'от 1 400 ₽' },
-  { size: 'Длинные треки', duration: 'от 4-х минут', price: '+100 ₽ / мин', japanese: 'по стандартной сетке' },
+  { size: 'TV-size', duration: 'до 3-х минут', price: 'от 500 ₽', japanese: 'от 700 ₽' },
+  { size: 'Full-size', duration: 'от 3-х до 5-ти минут', price: 'от 1 000 ₽', japanese: 'от 1 400 ₽' },
+  { size: 'Длинные треки', duration: 'от 5-ти минут', price: '+100 ₽ / мин', japanese: 'по стандартной сетке' },
 ]
 
 const factors = [
