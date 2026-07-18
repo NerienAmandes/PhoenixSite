@@ -102,7 +102,7 @@ export default function JoinPage() {
       <div className="reveal reveal-1">
         <span className="tag"><Megaphone size={12} /> Набор 2026</span>
       </div>
-      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[0.95]">
+      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.2]">
         Ищем
         <br />
         <span className="text-fire">единомышленников</span>

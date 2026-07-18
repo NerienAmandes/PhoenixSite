@@ -58,7 +58,7 @@ export default function ServicesHubPage() {
           <Sparkles size={12} /> Услуги
         </span>
       </div>
-      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[0.95]">
+      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.2]">
         Что мы
         <br />
         <span className="text-fire">делаем для вас</span>

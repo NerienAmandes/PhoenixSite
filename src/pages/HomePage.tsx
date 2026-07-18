@@ -25,7 +25,7 @@ export default function HomePage() {
                   <Flame size={12} /> Кавер-группа · Москва
                 </span>
               </div>
-              <h1 className="reveal reveal-2 mt-5 font-display text-[64px] sm:text-[88px] lg:text-[112px] leading-[0.95] tracking-tight">
+              <h1 className="reveal reveal-2 mt-5 font-display text-[64px] sm:text-[88px] lg:text-[112px] leading-[1.2] tracking-tight">
                 Музыка,
                 <br />
                 в которой

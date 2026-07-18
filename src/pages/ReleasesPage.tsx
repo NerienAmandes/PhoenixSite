@@ -32,7 +32,7 @@ export default function ReleasesPage() {
       <div className="reveal reveal-1">
         <span className="tag"><Youtube size={12} /> Портфолио</span>
       </div>
-      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[0.95]">
+      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.2]">
         Видео и <span className="text-fire">выступления</span>
       </h1>
       <p className="reveal reveal-3 mt-6 max-w-2xl text-lg text-muted">
