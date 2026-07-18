@@ -10,7 +10,7 @@ export default function TeamPage() {
       <div className="reveal reveal-1">
         <span className="tag"><Users size={12} /> Состав</span>
       </div>
-      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.2]">
+      <h1 className="reveal reveal-2 mt-7 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.35]">
         Семь сердец,
         <br />
         <span className="text-fire">один огонь</span>

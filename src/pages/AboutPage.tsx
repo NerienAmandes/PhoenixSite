@@ -153,7 +153,10 @@ export default function AboutPage() {
       <div className="reveal reveal-1">
         <span className="tag"><Flame size={12} /> О группе</span>
       </div>
-      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.2]">
+      <h1
+        className="reveal reveal-2 mt-7 font-display text-5xl sm:text-7xl lg:text-8xl"
+        style={{ lineHeight: 1.35 }}
+      >
         Кто
         <br />
         <span className="text-fire">мы такие?</span>

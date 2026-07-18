@@ -10,7 +10,7 @@ export default function ProfilePage() {
       <div className="reveal reveal-1">
         <span className="tag"><UserIcon size={12} /> Личный кабинет</span>
       </div>
-      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl leading-[1.2]">
+      <h1 className="reveal reveal-2 mt-7 font-display text-5xl sm:text-7xl leading-[1.35]">
         Скоро <span className="text-fire">здесь</span>
       </h1>
       <p className="reveal reveal-3 mt-5 text-lg text-muted max-w-xl">

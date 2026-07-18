@@ -147,7 +147,7 @@ export default function ServicesLyricsPage() {
           <Sparkles size={12} /> Услуги · Лирика
         </span>
       </div>
-      <h1 className="reveal reveal-2 mt-4 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.2]">
+      <h1 className="reveal reveal-2 mt-7 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.35]">
         Адаптация
         <br />
         <span className="text-fire">текстов</span> на русский

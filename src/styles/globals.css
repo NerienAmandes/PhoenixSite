@@ -212,12 +212,21 @@ textarea {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  display: inline-block;
-  /* padding-bottom нужен, чтобы descender '?' в Podarok не клипался
-     внутри line-box. Применяется ТОЛЬКО к строкам с .text-fire,
-     остальные строки заголовка остаются плотными. */
-  padding-bottom: 0.12em;
-  line-height: 1.3;
+  /* display: inline — НЕ inline-block. Иначе при наличии <br> в заголовке
+     line-box родителя режется по высоте inline-block'а и длинный descender
+     «?»/«у» в Podarok обрезается снизу. */
+  display: inline;
+  /* padding-bottom добавляет «воздух» под descender внутри line-box.
+     0.3em — с запасом под самые длинные выносные элементы Podarok. */
+  padding-bottom: 0.3em;
+  /* line-height задаёт минимальную высоту строки для градиентного фрагмента.
+     При display: inline line-box = max(parent line-height, эта + padding). */
+  line-height: 1.35;
+  /* box-decoration-break: clone нужен, чтобы градиент корректно
+     переносился на новую строку в заголовках (без него фон "течёт"
+     и/или обрезается нижняя часть букв с descender). */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* Card surface */
@@ -445,9 +454,11 @@ textarea {
   -webkit-text-fill-color: transparent;
   color: transparent;
   filter: saturate(1.06);
-  display: inline-block;
-  padding-bottom: 0.12em;
-  line-height: 1.3;
+  display: inline;
+  padding-bottom: 0.3em;
+  line-height: 1.35;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* Кнопка primary — четырёхстопный «огонь» с золотым хвостом */
