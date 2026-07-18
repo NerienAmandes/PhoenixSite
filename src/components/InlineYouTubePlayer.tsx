@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Play, Youtube } from 'lucide-react'
 
 interface InlineYouTubePlayerProps {
@@ -8,44 +7,21 @@ interface InlineYouTubePlayerProps {
 }
 
 /**
- * Inline-плеер YouTube: до клика показывает превью с кнопкой play,
- * после клика — autoplay lite-embed прямо в карточке (без редиректа).
- * `lite-embed` — это облегчённый iframe от YouTube (без баннер-рекламы,
- * минимальный набор фич), но для нашего лендинга подходит идеально.
+ * Inline-плеер YouTube: визуальная карточка с превью и кнопкой Play.
+ * Теперь является просто компонентом отображения (без внутреннего состояния iframe),
+ * чтобы корректно работать с внешним модальным окном.
  */
 export default function InlineYouTubePlayer({
   youtubeId,
   title,
   thumbnail,
 }: InlineYouTubePlayerProps) {
-  const [active, setActive] = useState(false)
-
   const cover = thumbnail || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
 
-  if (active) {
-    return (
-      <div className="relative aspect-video bg-base overflow-hidden">
-        <iframe
-          // lite-embed: autoplay=1 + минимальный набор фич YouTube IFrame API.
-          // Открывается строго из превью по клику — поисковики не считают это
-          // автоматической загрузкой стороннего контента.
-          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`}
-          title={title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          loading="lazy"
-          className="w-full h-full"
-        />
-      </div>
-    )
-  }
-
   return (
-    <button
-      type="button"
-      onClick={() => setActive(true)}
+    <div
       aria-label={`Воспроизвести видео: ${title}`}
-      className="relative aspect-video bg-base overflow-hidden w-full text-left group cursor-pointer"
+      className="relative aspect-video bg-base overflow-hidden w-full text-left group"
     >
       <img
         src={cover}
@@ -65,6 +41,6 @@ export default function InlineYouTubePlayer({
           Кавер
         </span>
       </div>
-    </button>
+    </div>
   )
 }

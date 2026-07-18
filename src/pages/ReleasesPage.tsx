@@ -85,17 +85,15 @@ export default function ReleasesPage() {
                 {portfolio.map((p, i) => (
                   <div
                     key={p.id}
-                    className="group block surface overflow-hidden reveal hover:border-accent transition-colors"
+                    className="group block surface overflow-hidden reveal hover:border-accent transition-colors cursor-pointer"
                     style={{ animationDelay: `${i * 0.05}s` }}
+                    onClick={() => setSelectedVideo(p)}
                   >
                     <InlineYouTubePlayer
                       youtubeId={p.youtubeId}
                       title={p.title}
                     />
-                    <div 
-                      className="p-5 cursor-pointer"
-                      onClick={() => setSelectedVideo(p)}
-                    >
+                    <div className="p-5">
                       <div className="font-display text-2xl leading-tight group-hover:text-accent transition-colors">
                         {p.title}
                       </div>
@@ -146,17 +144,25 @@ export default function ReleasesPage() {
             </button>
             <div className="aspect-video w-full bg-black">
               <iframe
-                src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=1`}
                 title={selectedVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="w-full h-full border-0"
               />
             </div>
-            <div className="p-5 sm:p-6 bg-surface">
+            <div className="p-5 sm:p-6 bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="font-display text-2xl sm:text-3xl leading-tight">
                 {selectedVideo.title}
               </h3>
+              <a 
+                href={`https://youtube.com/watch?v=${selectedVideo.youtubeId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-ghost shrink-0 border border-white/10"
+              >
+                <Youtube size={16} /> Смотреть на YouTube
+              </a>
             </div>
           </div>
         </div>

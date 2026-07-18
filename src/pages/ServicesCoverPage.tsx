@@ -22,6 +22,7 @@ import {
   Video,
   Users,
   X,
+  Youtube,
   type LucideIcon,
 } from 'lucide-react'
 import { isValidEmail, isValidName } from '../utils/validators'
@@ -386,18 +387,16 @@ export default function ServicesCoverPage() {
             {examples.map((v, i) => (
               <div
                 key={v.id}
-                className="group surface overflow-hidden reveal hover:border-accent transition-colors"
+                className="group surface overflow-hidden reveal hover:border-accent transition-colors cursor-pointer"
                 style={{ animationDelay: `${i * 0.05}s` }}
+                onClick={() => setSelectedVideo(v)}
               >
                 <InlineYouTubePlayer
                   youtubeId={v.youtubeId}
                   title={v.title}
                   thumbnail={v.thumbnail}
                 />
-                <div 
-                  className="p-4 cursor-pointer"
-                  onClick={() => setSelectedVideo(v)}
-                >
+                <div className="p-4">
                   <div className="font-display text-xl leading-tight group-hover:text-accent transition-colors">
                     {v.title}
                   </div>
@@ -424,17 +423,25 @@ export default function ServicesCoverPage() {
             </button>
             <div className="aspect-video w-full bg-black">
               <iframe
-                src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=1`}
                 title={selectedVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="w-full h-full border-0"
               />
             </div>
-            <div className="p-5 sm:p-6 bg-surface">
+            <div className="p-5 sm:p-6 bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="font-display text-2xl sm:text-3xl leading-tight">
                 {selectedVideo.title}
               </h3>
+              <a 
+                href={`https://youtube.com/watch?v=${selectedVideo.youtubeId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-ghost shrink-0 border border-white/10"
+              >
+                <Youtube size={16} /> Смотреть на YouTube
+              </a>
             </div>
           </div>
         </div>
