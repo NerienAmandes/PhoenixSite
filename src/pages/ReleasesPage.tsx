@@ -3,14 +3,16 @@ import { portfolio as staticPortfolio } from '../data/portfolio'
 import { upcomingReleases } from '../data/releases'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
-import { Youtube, Play, Loader2, Sparkles } from 'lucide-react'
+import { Youtube, Loader2, Sparkles, X } from 'lucide-react'
 import ReleaseCard from '../components/ReleaseCard'
+import InlineYouTubePlayer from '../components/InlineYouTubePlayer'
 
 type Tab = 'covers' | 'upcoming'
 
 export default function ReleasesPage() {
   useDocumentTitle('Видео')
   const [tab, setTab] = useState<Tab>('covers')
+  const [selectedVideo, setSelectedVideo] = useState<{id: string, title: string, youtubeId: string} | null>(null)
   const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
 
   // Используем YouTube данные, если они есть, иначе статические
@@ -81,43 +83,27 @@ export default function ReleasesPage() {
             <>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {portfolio.map((p, i) => (
-                  <a
+                  <div
                     key={p.id}
-                    href={`https://www.youtube.com/watch?v=${p.youtubeId}`}
-                    target="_blank"
-                    rel="noreferrer"
                     className="group block surface overflow-hidden reveal hover:border-accent transition-colors"
                     style={{ animationDelay: `${i * 0.05}s` }}
                   >
-                    <div className="relative aspect-video bg-base overflow-hidden">
-                      <img
-                        src={`https://i.ytimg.com/vi/${p.youtubeId}/hqdefault.jpg`}
-                        alt={p.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
-                        <div className="w-16 h-16 rounded-full bg-fire text-white flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform">
-                          <Play size={26} fill="currentColor" />
-                        </div>
-                      </div>
-                      <div className="absolute top-3 left-3">
-                        <span className="tag backdrop-blur-md bg-black/40 text-white border-white/20 text-[10px]">
-                          <Youtube size={10} />
-                          Кавер
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-5">
+                    <InlineYouTubePlayer
+                      youtubeId={p.youtubeId}
+                      title={p.title}
+                    />
+                    <div 
+                      className="p-5 cursor-pointer"
+                      onClick={() => setSelectedVideo(p)}
+                    >
                       <div className="font-display text-2xl leading-tight group-hover:text-accent transition-colors">
                         {p.title}
                       </div>
-                      <div className="mt-2 text-sm text-muted inline-flex items-center gap-1.5">
-                        Смотреть на YouTube →
+                      <div className="mt-2 text-sm text-accent inline-flex items-center gap-1.5">
+                        Смотреть во внутреннем плеере
                       </div>
                     </div>
-                  </a>
+                  </div>
                 ))}
               </div>
 
@@ -145,6 +131,35 @@ export default function ReleasesPage() {
             ))}
           </div>
         </>
+      )}
+
+      {/* Модальное окно с плеером */}
+      {selectedVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity">
+          <div className="relative w-full max-w-5xl bg-base rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+            <button 
+              onClick={() => setSelectedVideo(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors backdrop-blur-md"
+              aria-label="Закрыть"
+            >
+              <X size={24} />
+            </button>
+            <div className="aspect-video w-full bg-black">
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                title={selectedVideo.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0"
+              />
+            </div>
+            <div className="p-5 sm:p-6 bg-surface">
+              <h3 className="font-display text-2xl sm:text-3xl leading-tight">
+                {selectedVideo.title}
+              </h3>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

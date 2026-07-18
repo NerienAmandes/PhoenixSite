@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const ytRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&key=${apiKey}&maxResults=50`
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,status&playlistId=${playlistId}&key=${apiKey}&maxResults=50`
     )
 
     if (!ytRes.ok) {
@@ -31,7 +31,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return dateB - dateA
     })
 
-    const items = sortedItems.map((item: any) => ({
+    // Фильтруем видео: оставляем только публичные, исключаем удаленные/приватные
+    const visibleItems = sortedItems.filter((item: any) => {
+      const title = String(item.snippet?.title ?? '')
+      const privacyStatus = item.status?.privacyStatus
+      
+      // Исключаем системные заглушки YouTube для скрытых/удаленных видео
+      if (title === 'Private video' || title === 'Deleted video') return false
+      
+      // Оставляем только публичные видео, если доступен статус приватности
+      if (privacyStatus && privacyStatus !== 'public') return false
+      
+      return true
+    })
+
+    const items = visibleItems.map((item: any) => ({
       id: item.id,
       title: item.snippet.title,
       youtubeId: item.snippet.resourceId.videoId,
