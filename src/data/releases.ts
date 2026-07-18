@@ -27,7 +27,9 @@ export const upcomingReleases: Release[] = [
     cover: cover('I Really Want to Stay At Your House', 0),
     releaseDate: '2026-09-01',
     status: 'upcoming',
-    platforms: {},
+    platforms: {
+      youtube: 'https://www.youtube.com/watch?v=KvMY1uzSC1E&list=RDKvMY1uzSC1E&start_radio=1'
+    },
     description: 'Описание готовится.',
     currentStage: 0,
   },
@@ -38,7 +40,9 @@ export const upcomingReleases: Release[] = [
     cover: cover('Back to Life', 60),
     releaseDate: '2026-10-01',
     status: 'upcoming',
-    platforms: {},
+    platforms: {
+      youtube: 'https://www.youtube.com/watch?v=F0UIsSnotlA&list=RDF0UIsSnotlA&start_radio=1'
+    },
     description: 'Описание готовится.',
     currentStage: 10,
   },
@@ -49,7 +53,9 @@ export const upcomingReleases: Release[] = [
     cover: cover('Catch', 120),
     releaseDate: '2026-11-01',
     status: 'upcoming',
-    platforms: {},
+    platforms: {
+      youtube: 'https://www.youtube.com/watch?v=NOiyDlWl534&list=RDNOiyDlWl534&start_radio=1'
+    },
     description: 'Описание готовится.',
     currentStage: 10,
   },
@@ -60,7 +66,9 @@ export const upcomingReleases: Release[] = [
     cover: cover('Test me', 180),
     releaseDate: '2026-12-01',
     status: 'upcoming',
-    platforms: {},
+    platforms: {
+      youtube: 'https://www.youtube.com/watch?v=CL6wr7jozs8&list=RDCL6wr7jozs8&start_radio=1'
+    },
     description: 'Описание готовится.',
     currentStage: 11,
   },
