@@ -141,10 +141,11 @@ h4,
   font-family: 'Podarok', 'Lobster', cursive;
   font-weight: 400;
   letter-spacing: 0.005em;
-  line-height: 1.15;
-  /* Защита от обрезки descender у букв вроде у, ц, щ */
-  padding-bottom: 0.1em;
-  display: inline-block;
+  line-height: 1.2;
+  /* Защита от обрезки descender у букв вроде у, ц, щ, й */
+  padding-bottom: 0.12em;
+  margin-bottom: -0.08em;
+  overflow: visible;
 }
 
 input,
@@ -211,8 +212,9 @@ textarea {
   -webkit-text-fill-color: transparent;
   color: transparent;
   /* Защита от обрезки descender у букв вроде у, ц, щ */
-  padding-bottom: 0.08em;
+  padding-bottom: 0.1em;
   display: inline-block;
+  line-height: 1.2;
 }
 
 /* Card surface */
@@ -411,6 +413,8 @@ textarea {
   -webkit-text-fill-color: transparent;
   color: transparent;
   filter: saturate(1.06);
+  padding-bottom: 0.1em;
+  line-height: 1.2;
 }
 
 /* Кнопка primary — четырёхстопный «огонь» с золотым хвостом */
