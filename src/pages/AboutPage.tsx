@@ -289,7 +289,7 @@ export default function AboutPage() {
                 style={{ animationDelay: `${i * 0.06}s` }}
               >
                 <div
-                  className={`absolute left-0 top-2 w-10 h-10 rounded-full flex items-center justify-center font-display text-sm text-white ${
+                  className={`milestone-dot absolute left-0 top-2 w-10 h-10 rounded-full flex items-center justify-center font-display text-sm ${
                     m.isCurrent ? 'bg-fire shadow-glow' : 'bg-fire/85'
                   }`}
                 >
@@ -303,7 +303,7 @@ export default function AboutPage() {
                     {m.title}
                   </h3>
                   {m.isCurrent && (
-                    <span className="inline-flex items-center gap-1 surface-soft px-2 py-0.5 text-[10px] tracking-[0.2em] uppercase text-fire rounded-full">
+                    <span className="now-badge inline-flex items-center gap-1 px-2 py-0.5 text-[10px] tracking-[0.2em] uppercase rounded-full">
                       <Youtube size={12} /> Сейчас
                     </span>
                   )}
