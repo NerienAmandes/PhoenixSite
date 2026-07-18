@@ -34,8 +34,8 @@ export default function HomePage() {
               </h1>
               <p className="reveal reveal-3 mt-7 max-w-xl text-lg text-muted">
                 FirePhoenix — кавер-группа, которая превращает любимые хиты в
-                живые истории на русском. Семь музыкантов, шесть лет на сцене,
-                один огонь внутри.
+                живые истории на русском. Почти 7 лет каверов, семь
+                музыкантов, один огонь внутри.
               </p>
               <div className="reveal reveal-4 mt-9 flex flex-wrap gap-3">
                 <a
@@ -52,9 +52,9 @@ export default function HomePage() {
               </div>
               <div className="reveal reveal-5 mt-12 grid grid-cols-3 gap-6 max-w-md">
                 {[
-                  { v: '6+', l: 'лет на сцене' },
-                  { v: '120', l: 'концертов' },
-                  { v: '4M+', l: 'прослушиваний' },
+                  { v: '~7', l: 'лет каверов' },
+                  { v: '0', l: 'концертов' },
+                  { v: '352 212', l: 'просмотров' },
                 ].map((s) => (
                   <div key={s.l}>
                     <div className="font-display text-3xl text-fire">{s.v}</div>
@@ -67,19 +67,22 @@ export default function HomePage() {
             </div>
 
             <div className="lg:col-span-5 relative">
-              <div className="reveal reveal-3 relative aspect-[4/5] rounded-[36px] overflow-hidden surface animate-floaty">
+              <div className="reveal reveal-3 relative aspect-square rounded-[36px] overflow-hidden surface animate-floaty">
                 <img
-                  src="https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Concert%20photograph%20of%20a%20rock%20cover%20band%20on%20stage%2C%20dramatic%20red%20and%20orange%20stage%20lights%2C%20singer%20holding%20microphone%2C%20cinematic%20warm%20tones%2C%20live%20energy%2C%20shallow%20depth%20of%20field&image_size=portrait_4_3"
-                  alt="FirePhoenix на сцене"
+                  src="/Phoenix.jpg"
+                  alt="FirePhoenix"
                   className="w-full h-full object-cover"
+                  width={800}
+                  height={800}
+                  loading="eager"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-white/80">
-                    Live · 2026
+                    С 2019 года
                   </div>
                   <div className="font-display text-2xl mt-1 text-white">
-                    Каждый концерт — маленькое чудо
+                    Почти 7 лет каверов
                   </div>
                 </div>
               </div>

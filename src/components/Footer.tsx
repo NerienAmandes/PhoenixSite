@@ -68,7 +68,21 @@ export default function Footer() {
               <li><Link to="/about" className="hover:text-accent">О группе</Link></li>
               <li><Link to="/team" className="hover:text-accent">Состав</Link></li>
               <li><Link to="/releases" className="hover:text-accent">Релизы</Link></li>
-              <li><Link to="/services" className="hover:text-accent">Услуги</Link></li>
+              <li>
+                <Link to="/services" className="hover:text-accent">Услуги</Link>
+                <ul className="grid gap-1.5 mt-1.5 ml-4 text-sm text-muted">
+                  <li>
+                    <Link to="/services/lyrics" className="hover:text-accent">
+                      · Адаптация текста
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/services/cover" className="hover:text-accent">
+                      · Кавер под ключ
+                    </Link>
+                  </li>
+                </ul>
+              </li>
               <li><Link to="/join" className="hover:text-accent">Набор</Link></li>
             </ul>
           </div>

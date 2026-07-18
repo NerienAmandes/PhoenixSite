@@ -44,13 +44,21 @@ export interface Service {
 
 // ---------- Каверы ----------
 
-export type CoverStageId = 'lyrics' | 'vocal' | 'tuning' | 'mixing' | 'art' | 'video'
+export type CoverStageId =
+  | 'lyrics'
+  | 'vocal'
+  | 'back-vocal'
+  | 'tuning'
+  | 'mixing'
+  | 'art'
+  | 'video'
 
 export interface CoverStageMeta {
   id: CoverStageId
   title: string
   description: string
-  /** Базовая цена этапа в рублях. Сумма выбранных этапов = стоимость заказа. */
+  /** Базовая цена этапа в рублях. Сумма выбранных этапов = стоимость заказа.
+   *  Итог корректируется в зависимости от сложности трека. */
   basePrice: number
 }
 
@@ -64,8 +72,14 @@ export const COVER_STAGES: CoverStageMeta[] = [
   {
     id: 'vocal',
     title: 'Запись вокала',
-    description: 'Студийная запись голоса (3–4 дубля) в профессиональном качестве.',
-    basePrice: 1500,
+    description: 'Студийная запись основного голоса (3–4 дубля) в профессиональном качестве.',
+    basePrice: 700,
+  },
+  {
+    id: 'back-vocal',
+    title: 'Бэк-вокал',
+    description: 'Подложки, хоры и ответные партии — добавляем объём и фактуру.',
+    basePrice: 300,
   },
   {
     id: 'tuning',
@@ -77,7 +91,7 @@ export const COVER_STAGES: CoverStageMeta[] = [
     id: 'mixing',
     title: 'Сведение',
     description: 'Баланс вокала и минусовки, эффекты, компрессия, финальный мастеринг.',
-    basePrice: 2000,
+    basePrice: 500,
   },
   {
     id: 'art',
