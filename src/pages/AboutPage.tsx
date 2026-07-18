@@ -159,7 +159,14 @@ export default function AboutPage() {
       >
         Кто
         <br />
-        <span className="text-fire">мы такие?</span>
+        <span
+          className="text-fire inline-block pt-1"
+          style={{
+            verticalAlign: 'baseline',
+            transform: 'translateY(3px)',
+            lineHeight: 1.5,
+          }}
+        >мы такие?&nbsp;</span>
       </h1>
       <p className="reveal reveal-3 mt-7 max-w-3xl text-lg sm:text-xl text-muted leading-relaxed">
         С вами на связи{' '}
