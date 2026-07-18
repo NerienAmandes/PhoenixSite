@@ -24,38 +24,69 @@
 
 :root,
 [data-theme='light'] {
-  /* Тёплая кремовая база вместо жёсткого белого */
-  --bg-base: #f6ecdc;
-  --bg-elevated: #fbf3e4;
-  --bg-soft: #efe2cb;
-  /* Тёплый тёмно-коричневый текст — мягче чёрного, не выжигает глаза */
-  --text-primary: #2b1d15;
-  --text-muted: #7a6552;
-  --accent-primary: #d83560;
-  --accent-soft: #f08aa0;
-  --accent-warm: #e96a26;
-  --accent-yellow: #f5b431;
-  --border-soft: rgba(216, 53, 96, 0.18);
-  --shadow-warm: 0 30px 80px -40px rgba(216, 53, 96, 0.28);
-  --gradient-fire: linear-gradient(135deg, #f08aa0 0%, #e8533f 45%, #e96a26 100%);
-  --gradient-fire-soft: linear-gradient(135deg, rgba(240, 138, 160, 0.28) 0%, rgba(233, 106, 38, 0.22) 100%);
-  --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Тёплая кремовая база — мягче белого, не выжигает глаза */
+  --bg-base: #f4ead7;
+  --bg-elevated: #fbf4e3;
+  --bg-soft: #ecdfc4;
+  --bg-deep: #e2d2af;
+
+  /* Тёплый иерархичный текст: от тёмно-шоколадного к карамельному */
+  --text-primary: #2b1a12;
+  --text-secondary: #4d3a2a;
+  --text-muted: #8a7458;
+
+  /* Огненные акценты — палитра пламени на креме */
+  --accent-primary: #d03955;
+  --accent-soft: #f77189;
+  --accent-coral: #fa5f58;
+  --accent-warm: #f7882e;
+  --accent-peach: #f9b17f;
+  --accent-yellow: #fec051;
+  --accent-sunny: #fae143;
+  --accent-cream: #faed9a;
+  --accent-light: #ffe577;
+
+  /* Тонкие границы и тени в тёплых тонах */
+  --border-soft: rgba(43, 26, 18, 0.10);
+  --border-strong: rgba(43, 26, 18, 0.18);
+  --shadow-warm: 0 30px 70px -38px rgba(208, 57, 85, 0.32);
+  --shadow-soft: 0 1px 0 rgba(255, 250, 240, 0.7) inset, 0 12px 30px -22px rgba(43, 26, 18, 0.22);
+  --shadow-glow: 0 18px 50px -18px rgba(247, 136, 46, 0.45);
+
+  /* Градиенты огня в светлой теме — от розового через алый к золоту */
+  --gradient-fire: linear-gradient(135deg, #f77189 0%, #d03955 30%, #f7882e 65%, #fec051 100%);
+  --gradient-fire-soft: linear-gradient(135deg, rgba(247, 113, 137, 0.22) 0%, rgba(247, 136, 46, 0.18) 50%, rgba(254, 192, 81, 0.16) 100%);
+  --gradient-sunrise: linear-gradient(135deg, #ffe577 0%, #fae143 35%, #f7882e 75%, #d03955 100%);
+  --gradient-warm-glow: linear-gradient(180deg, rgba(244, 234, 215, 0) 0%, rgba(254, 192, 81, 0.14) 100%);
+  --noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 [data-theme='dark'] {
   --bg-base: #0e0b0f;
   --bg-elevated: #1a1518;
   --bg-soft: #221a1e;
+  --bg-deep: #2a2024;
   --text-primary: #faf5ee;
+  --text-secondary: #d8cdc7;
   --text-muted: #b5a8a2;
   --accent-primary: #f84b6b;
   --accent-soft: #f78376;
+  --accent-coral: #fa5f58;
   --accent-warm: #ff9d4d;
+  --accent-peach: #f9b17f;
   --accent-yellow: #ffeb66;
+  --accent-sunny: #fae143;
+  --accent-cream: #faed9a;
+  --accent-light: #ffe577;
   --border-soft: rgba(247, 131, 118, 0.22);
+  --border-strong: rgba(247, 131, 118, 0.36);
   --shadow-warm: 0 30px 80px -40px rgba(248, 75, 107, 0.55);
+  --shadow-soft: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 30px -22px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 18px 60px -20px rgba(248, 75, 107, 0.55);
   --gradient-fire: linear-gradient(135deg, #f84b6b 0%, #de3d3b 50%, #f7882e 100%);
   --gradient-fire-soft: linear-gradient(135deg, rgba(248, 75, 107, 0.22) 0%, rgba(247, 136, 46, 0.18) 100%);
+  --gradient-sunrise: linear-gradient(135deg, #ffe577 0%, #fae143 35%, #ff9d4d 75%, #f84b6b 100%);
+  --gradient-warm-glow: linear-gradient(180deg, rgba(14, 11, 15, 0) 0%, rgba(255, 157, 77, 0.10) 100%);
 }
 
 * {
@@ -335,33 +366,74 @@ textarea {
   animation: flameParticle 2.4s linear infinite;
 }
 
-/* Light theme tweaks — теплее, без жёстких теней и белого */
+/* ===========================================================
+   СВЕТЛАЯ ТЕМА — тёплый кремовый фон с огненными акцентами
+   =========================================================== */
+[data-theme='light'] body {
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(254, 192, 81, 0.18), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(247, 113, 137, 0.12), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 0% 30%, rgba(250, 95, 88, 0.06), transparent 60%);
+  background-attachment: fixed;
+}
+
+[data-theme='light'] body::before {
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+}
+
+/* Поверхности — мягкое тепло, без жёстких границ */
 [data-theme='light'] .surface {
-  background: var(--bg-elevated);
-  border-color: rgba(43, 29, 21, 0.08);
+  background: linear-gradient(180deg, #fdf6e8 0%, var(--bg-elevated) 100%);
+  border-color: var(--border-soft);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.6) inset,
-    0 18px 40px -28px rgba(43, 29, 21, 0.22);
+    0 1px 0 rgba(255, 250, 240, 0.7) inset,
+    0 18px 40px -28px rgba(43, 26, 18, 0.18);
+}
+
+[data-theme='light'] .surface:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 250, 240, 0.7) inset,
+    0 24px 50px -28px rgba(208, 57, 85, 0.22);
 }
 
 [data-theme='light'] .surface-soft {
   background: var(--bg-soft);
-  border-color: rgba(43, 29, 21, 0.08);
+  border-color: var(--border-soft);
 }
 
+/* Огненный градиентный текст — 4-стоп: розовый → алый → оранжевый → золотой */
 [data-theme='light'] .text-fire {
-  filter: saturate(1.08) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.4));
+  background: linear-gradient(135deg, #f77189 0%, #d03955 30%, #f7882e 65%, #fec051 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: saturate(1.06);
 }
 
+/* Кнопка primary — четырёхстопный «огонь» с золотым хвостом */
 [data-theme='light'] .btn-primary {
-  color: #ffffff;
+  background: linear-gradient(135deg, #f7882e 0%, #d03955 60%, #b82746 100%);
+  color: #fffaf0;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 16px 36px -16px rgba(216, 53, 96, 0.55);
+    0 1px 0 rgba(255, 250, 240, 0.5) inset,
+    0 16px 36px -16px rgba(208, 57, 85, 0.55),
+    0 0 0 1px rgba(255, 250, 240, 0.2) inset;
+}
+[data-theme='light'] .btn-primary:hover {
+  background: linear-gradient(135deg, #ff9742 0%, #e04565 55%, #c93051 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 250, 240, 0.6) inset,
+    0 22px 46px -14px rgba(208, 57, 85, 0.7);
 }
 
+/* Прозрачные и контурные кнопки */
 [data-theme='light'] .btn-ghost {
   color: var(--text-primary);
+  background: rgba(251, 244, 227, 0.4);
+  border-color: var(--border-soft);
 }
 [data-theme='light'] .btn-ghost:hover {
   background: var(--bg-soft);
@@ -370,71 +442,168 @@ textarea {
 }
 
 [data-theme='light'] .btn-outline {
-  background: var(--bg-elevated);
+  background: rgba(251, 244, 227, 0.6);
   color: var(--text-primary);
-  border-color: rgba(43, 29, 21, 0.12);
+  border-color: var(--border-strong);
 }
 [data-theme='light'] .btn-outline:hover {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
+  background: rgba(255, 250, 240, 0.8);
 }
 
+/* Тэги — мягкие, тёплые, с коралловым градиентом */
 [data-theme='light'] .tag {
-  background: rgba(216, 53, 96, 0.10);
-  color: #b92a52;
-  border-color: rgba(216, 53, 96, 0.22);
+  background: linear-gradient(135deg, rgba(247, 113, 137, 0.14) 0%, rgba(247, 136, 46, 0.14) 100%);
+  color: #b42a45;
+  border-color: rgba(208, 57, 85, 0.22);
+  box-shadow: 0 1px 0 rgba(255, 250, 240, 0.5) inset;
 }
 
+/* Поля форм — тёплый «бумажный» фон */
 [data-theme='light'] input,
 [data-theme='light'] textarea,
 [data-theme='light'] select {
-  background: #fff8ea;
-  border-color: rgba(43, 29, 21, 0.14);
+  background: #fff8e8;
+  border-color: rgba(43, 26, 18, 0.14);
   color: var(--text-primary);
+  box-shadow: 0 1px 0 rgba(255, 250, 240, 0.7) inset;
 }
-
+[data-theme='light'] input:hover,
+[data-theme='light'] textarea:hover,
+[data-theme='light'] select:hover {
+  border-color: rgba(43, 26, 18, 0.22);
+}
 [data-theme='light'] input::placeholder,
 [data-theme='light'] textarea::placeholder {
-  color: rgba(122, 101, 82, 0.85);
+  color: rgba(138, 116, 88, 0.85);
 }
-
 [data-theme='light'] input:focus,
 [data-theme='light'] textarea:focus,
 [data-theme='light'] select:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-primary) 14%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 250, 240, 0.7) inset,
+    0 0 0 4px rgba(208, 57, 85, 0.14);
+  background: #fffaf0;
 }
 
-/* Поля-чекбоксы в форме заказа кавера — подсветка выбора в светлой теме */
+/* Поля-чекбоксы в форме заказа кавера */
 [data-theme='light'] label.border-border {
-  background: #fff8ea !important;
-  border-color: rgba(43, 29, 21, 0.12) !important;
+  background: #fff8e8 !important;
+  border-color: rgba(43, 26, 18, 0.12) !important;
+  box-shadow: 0 1px 0 rgba(255, 250, 240, 0.7) inset;
+}
+[data-theme='light'] label.border-border:hover {
+  border-color: rgba(208, 57, 85, 0.35) !important;
+  background: #fffaf0 !important;
 }
 [data-theme='light'] label.border-fire {
-  background: rgba(216, 53, 96, 0.08) !important;
+  background: linear-gradient(135deg, rgba(208, 57, 85, 0.10) 0%, rgba(247, 136, 46, 0.10) 100%) !important;
   border-color: var(--accent-primary) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 250, 240, 0.7) inset,
+    0 8px 20px -14px rgba(208, 57, 85, 0.4) !important;
 }
 
-/* Шапка навигации в светлой теме: чуть плотнее фон, без жёсткой границы */
+/* Шапка навигации — тёплый «матовый» эффект */
 [data-theme='light'] header.sticky {
-  background: color-mix(in srgb, var(--bg-base) 88%, transparent) !important;
-  border-bottom: 1px solid rgba(43, 29, 21, 0.06);
-}
-
-/* Подсветка выбранной вкладки в релизах */
-[data-theme='light'] .text-muted {
-  color: var(--text-muted);
+  background: color-mix(in srgb, var(--bg-base) 82%, transparent) !important;
+  border-bottom: 1px solid rgba(43, 26, 18, 0.06);
+  box-shadow: 0 8px 24px -22px rgba(43, 26, 18, 0.2);
 }
 
 /* Скроллбар — тёплый в светлой теме */
 [data-theme='light'] ::-webkit-scrollbar-thumb {
-  background: rgba(43, 29, 21, 0.18);
+  background: rgba(43, 26, 18, 0.18);
 }
 [data-theme='light'] ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-primary);
 }
+[data-theme='light'] ::-webkit-scrollbar-track {
+  background: rgba(43, 26, 18, 0.04);
+}
 
-/* Лого-плитка в навбаре: тёплая заливка вместо плоского белого */
+/* Выделение текста — кремовый текст на огненной подложке */
+[data-theme='light'] ::selection {
+  background: #d03955;
+  color: #fff8e8;
+}
+
+/* Лого-плитка и контейнеры */
 [data-theme='light'] .bg-base {
   background: var(--bg-elevated);
+  box-shadow: var(--shadow-soft);
 }
+
+/* Логотип птицы — в светлой теме должен быть видимым на креме */
+[data-theme='light'] .bg-base img[src$="logoPtitca.svg"] {
+  filter: drop-shadow(0 1px 0 rgba(255, 250, 240, 0.6));
+}
+
+/* Фон-сетка hero — мягче, чем в тёмной */
+[data-theme='light'] .grid-bg {
+  background-image:
+    linear-gradient(rgba(208, 57, 85, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(208, 57, 85, 0.10) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, black 25%, transparent 75%);
+  opacity: 0.7;
+}
+
+/* Огненные блобы — тёплая палитра, приглушённая, чтобы не «выжигать» крем */
+[data-theme='light'] .flame-blob {
+  opacity: 0.40;
+  filter: blur(90px);
+}
+
+/* Статистика и подписи в hero */
+[data-theme='light'] .text-muted {
+  color: var(--text-muted);
+}
+[data-theme='light'] .text-accent {
+  color: #b42a45;
+}
+
+/* Карточки релизов — выравниваем тени под светлый фон */
+[data-theme='light'] .surface img {
+  filter: saturate(1.03) contrast(1.02);
+}
+
+/* Подсветка выбранной навигации */
+[data-theme='light'] .bg-fireSoft {
+  background: linear-gradient(135deg, rgba(247, 113, 137, 0.14) 0%, rgba(247, 136, 46, 0.14) 100%) !important;
+  color: #b42a45 !important;
+}
+
+/* Кнопка избранного (сердце) — тёплый полупрозрачный фон */
+[data-theme='light'] .bg-black\/40 {
+  background-color: rgba(43, 26, 18, 0.45) !important;
+}
+[data-theme='light'] .bg-white\/95 {
+  background-color: rgba(255, 248, 232, 0.95) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Тултип этапов релиза */
+[data-theme='light'] .bg-base.border {
+  background: #fff8e8 !important;
+  border-color: rgba(43, 26, 18, 0.12) !important;
+  box-shadow: 0 12px 28px -16px rgba(43, 26, 18, 0.25);
+}
+
+/* Hero фото Phoenix.jpg — чуть теплее по тону */
+[data-theme='light'] .surface img[src$="Phoenix.jpg"] {
+  filter: saturate(1.08) contrast(1.04);
+}
+
+/* Финальный CTA блок — рассветный градиент: жёлтый → золотой → оранжевый → алый */
+[data-theme='light'] .bg-fire {
+  background: linear-gradient(135deg, #ffe577 0%, #f7882e 50%, #d03955 100%);
+}
+[data-theme='light'] .bg-warm {
+  background: linear-gradient(135deg, #fec051 0%, #f7882e 100%);
+}
+
+/* Переход при смене темы настраивается на уровне body — глобальный transition
+   может конфликтовать с анимациями (breathe, flame) и hover-эффектами. */
