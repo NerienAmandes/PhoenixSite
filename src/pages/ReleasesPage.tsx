@@ -133,8 +133,8 @@ export default function ReleasesPage() {
 
       {/* Модальное окно с плеером */}
       {selectedVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity">
-          <div className="relative w-full max-w-5xl bg-base rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm transition-opacity">
+          <div className="relative w-full max-w-4xl bg-base rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-full">
             <button 
               onClick={() => setSelectedVideo(null)}
               className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors backdrop-blur-md"
@@ -142,7 +142,7 @@ export default function ReleasesPage() {
             >
               <X size={24} />
             </button>
-            <div className="aspect-video w-full bg-black">
+            <div className="aspect-video w-full bg-black shrink-0">
               <iframe
                 src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&controls=1`}
                 title={selectedVideo.title}
@@ -151,17 +151,17 @@ export default function ReleasesPage() {
                 className="w-full h-full border-0"
               />
             </div>
-            <div className="p-5 sm:p-6 bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h3 className="font-display text-2xl sm:text-3xl leading-tight">
+            <div className="p-4 sm:p-5 bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-y-auto">
+              <h3 className="font-display text-xl sm:text-2xl leading-tight">
                 {selectedVideo.title}
               </h3>
               <a 
                 href={`https://youtube.com/watch?v=${selectedVideo.youtubeId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="btn btn-ghost shrink-0 border border-white/10"
+                className="btn btn-ghost shrink-0 border border-white/10 text-sm py-2 px-4"
               >
-                <Youtube size={16} /> Смотреть на YouTube
+                <Youtube size={16} /> На YouTube
               </a>
             </div>
           </div>
