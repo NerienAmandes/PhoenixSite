@@ -24,7 +24,7 @@ export const upcomingReleases: Release[] = [
     id: 'u1',
     title: 'I Really Want to Stay At Your House',
     originalArtist: "Rosa Walton (Let's Eat Grandma)",
-    cover: cover('I Really Want to Stay At Your House', 0),
+    cover: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=800&auto=format&fit=crop', // Cyberpunk neon vibe
     releaseDate: '2026-09-01',
     status: 'upcoming',
     platforms: {
@@ -37,7 +37,7 @@ export const upcomingReleases: Release[] = [
     id: 'u2',
     title: 'Back to Life',
     originalArtist: 'HAN',
-    cover: cover('Back to Life', 60),
+    cover: 'https://images.unsplash.com/photo-1614680376593-902f74a936c2?q=80&w=800&auto=format&fit=crop', // Dark moody star vibe
     releaseDate: '2026-10-01',
     status: 'upcoming',
     platforms: {
@@ -50,7 +50,7 @@ export const upcomingReleases: Release[] = [
     id: 'u3',
     title: 'Catch',
     originalArtist: 'Yena',
-    cover: cover('Catch', 120),
+    cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop', // Pop rock concert vibe
     releaseDate: '2026-11-01',
     status: 'upcoming',
     platforms: {
@@ -63,7 +63,7 @@ export const upcomingReleases: Release[] = [
     id: 'u4',
     title: 'Test me!',
     originalArtist: 'Xdinary Heroes',
-    cover: cover('Test me', 180),
+    cover: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?q=80&w=800&auto=format&fit=crop', // Rock band vibe
     releaseDate: '2026-12-01',
     status: 'upcoming',
     platforms: {
@@ -71,6 +71,19 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Описание готовится.',
     currentStage: 11,
+  },
+  {
+    id: 'u5',
+    title: 'Candy Scar (Zombie Stage ROUND 1)',
+    originalArtist: 'VIVINOS / Rubyeye · C!naH',
+    cover: 'https://images.unsplash.com/photo-1518834107812-67b0b7c58434?q=80&w=800&auto=format&fit=crop', // Dark stage with pink/red neon vibe
+    releaseDate: '2027-01-15',
+    status: 'upcoming',
+    platforms: {
+      youtube: 'https://www.youtube.com/watch?v=giV5T1U4NyI' // ID from search
+    },
+    description: 'Тот самый Zombie Stage Round 1 (Mizi vs Sua).',
+    currentStage: 7, // 7 = Арт (если требуется). Текст(0) и Вокал(2) готовы, сведения и видео нет.
   },
 ]
 

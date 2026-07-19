@@ -8,7 +8,8 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function HomePage() {
   useDocumentTitle('Главная')
-  const upcoming = releases.filter((r) => r.status === 'upcoming').slice(0, 3)
+  // Показываем все предстоящие релизы (до 6 штук), чтобы Zombie Stage тоже был виден
+  const upcoming = releases.filter((r) => r.status === 'upcoming').slice(0, 6)
 
   return (
     <div>
@@ -105,7 +106,7 @@ export default function HomePage() {
             Все релизы <ArrowUpRight size={14} />
           </Link>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {upcoming.map((r, i) => (
             <ReleaseCard key={r.id} release={r} index={i} />
           ))}
