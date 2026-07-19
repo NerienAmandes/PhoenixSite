@@ -16,6 +16,7 @@ import {
   Youtube,
   Send,
   ArrowUpRight,
+  Globe2,
 } from 'lucide-react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
@@ -61,7 +62,7 @@ const stats = [
   { icon: Music, label: 'Стиль', value: 'Кавер · Аниме · Pop' },
   { icon: Users, label: 'Команда', value: '30+ человек' },
   { icon: Sparkles, label: 'Адаптации', value: 'Каждый месяц' },
-  { icon: Flame, label: 'Студия', value: 'FireLab' },
+  { icon: Globe2, label: 'География', value: 'Разные города' },
 ]
 
 const process = [
@@ -137,7 +138,7 @@ const milestones = [
 ]
 
 const gallery = [
-  'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Band%20rehearsal%20in%20warm%20vintage%20studio%2C%20guitars%2C%20drums%2C%20warm%20orange%20light%2C%20analog%20film%20look&image_size=landscape_4_3',
+  'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Cover%20band%20rehearsal%20in%20cozy%20living%20room%2C%20guitars%20and%20laptop%20with%20audio%20waveform%2C%20warm%20orange%20lamp%20light%2C%20analog%20film%20look&image_size=landscape_4_3',
   'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Live%20concert%20crowd%20view%20from%20stage%2C%20red%20spotlights%2C%20hands%20in%20air%2C%20cinematic%20concert%20photography&image_size=landscape_4_3',
   'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Microphone%20on%20vintage%20stage%2C%20spotlight%2C%20orange%20and%20red%20haze%2C%20moody%20close%20up&image_size=square',
   'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Backstage%20of%20a%20rock%20band%2C%20instruments%20cases%2C%20tape%2C%20vintage%20warm%20light&image_size=landscape_4_3',
@@ -246,6 +247,39 @@ export default function AboutPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Distributed team */}
+      <section className="mt-20 sm:mt-28">
+        <div className="surface relative overflow-hidden p-7 sm:p-10 reveal">
+          <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-fire opacity-10 blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-warm opacity-10 blur-3xl" />
+          <div className="relative grid gap-6 lg:grid-cols-12 items-center">
+            <div className="lg:col-span-5">
+              <div className="text-[10px] sm:text-xs tracking-[0.3em] uppercase text-accent">
+                География
+              </div>
+              <h2 className="mt-1 font-display text-3xl sm:text-5xl leading-tight">
+                Один огонь —
+                <br />
+                <span className="text-fire">много городов</span>
+              </h2>
+            </div>
+            <div className="lg:col-span-7 text-base sm:text-lg text-muted leading-relaxed">
+              <p>
+                Мы — кавер-команда, разбросанная по разным городам и странам.
+                У нас нет общей студии: каждый пишет свою партию дома, на своём
+                оборудовании и в своём темпе.
+              </p>
+              <p className="mt-3">
+                Зато есть общие онлайн-репетиции, общий движок и общий слух.
+                Поэтому в каждом треке живёт немного разных комнат, городов
+                и настроений — и именно это делает наши каверы{' '}
+                <span className="text-ink font-medium">настоящими</span>.
+              </p>
+            </div>
           </div>
         </div>
       </section>

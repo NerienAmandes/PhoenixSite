@@ -5,9 +5,9 @@ import {
   Mic2,
   ArrowUpRight,
   PenLine,
-  Music4,
   Clock,
   ShieldCheck,
+  Globe2,
 } from 'lucide-react'
 
 const services = [
@@ -46,7 +46,7 @@ const services = [
 const guarantees = [
   { icon: Clock, title: 'Сроки', text: 'От 3 дней. Срочные заказы — ×2.' },
   { icon: ShieldCheck, title: 'Гарантия', text: 'Бесплатные правки и предоплата от 50%.' },
-  { icon: Music4, title: 'Саунд', text: 'Свой стиль — без штампованного «кавера из ютуба».' },
+  { icon: Globe2, title: 'География', text: 'Команда из разных городов и стран — работаем онлайн.' },
 ]
 
 export default function ServicesHubPage() {

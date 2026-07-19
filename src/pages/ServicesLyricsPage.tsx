@@ -15,11 +15,10 @@ import {
   AlertCircle,
   Loader2,
   PenLine,
-  Music2,
-  Quote,
   Mic2,
 } from 'lucide-react'
 import { isValidEmail, isValidName } from '../utils/validators'
+import AdaptationExampleView from '../components/AdaptationExampleView'
 
 const priceTable = [
   { size: 'TV-size', duration: 'до 2-х минут', price: 'от 500 ₽', japanese: 'от 700 ₽' },
@@ -312,33 +311,17 @@ export default function ServicesLyricsPage() {
               Примеры адаптаций
             </h2>
           </div>
+          <a
+            href="https://t.me/fire_PhoenixTeam"
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost text-sm"
+          >
+            Заказать свою <ArrowUpRight size={14} />
+          </a>
         </div>
 
-        {/* Заглушка — примеры подгрузим позже (список появится здесь). */}
-        <div className="surface-soft p-7 sm:p-9 text-center">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-fireSoft flex items-center justify-center text-accent">
-            <Quote size={22} />
-          </div>
-          <h3 className="mt-5 font-display text-3xl">Скоро здесь появятся фрагменты</h3>
-          <p className="mt-3 text-base text-muted max-w-xl mx-auto">
-            Готовим подборку параллелей «оригинал ↔ наша адаптация» — с разбором
-            ритма, рифм и смысловых решений. Пока можно заглянуть в раздел релизов
-            и оценить готовые треки.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/releases" className="btn btn-outline">
-              <Music2 size={14} /> Слушать релизы
-            </Link>
-            <a
-              href="https://t.me/fire_PhoenixTeam"
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-primary"
-            >
-              Спросить в Telegram <ArrowUpRight size={14} />
-            </a>
-          </div>
-        </div>
+        <AdaptationExampleView />
       </section>
 
       <section className="mt-20">

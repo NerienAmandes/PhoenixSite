@@ -87,7 +87,10 @@ export const upcomingReleases: Release[] = [
   },
 ]
 
+// Объединённый список: сначала предстоящие, потом вышедшие.
+// Так фильтр по status === 'upcoming' на главной странице работает корректно.
 export const releases: Release[] = [
+  ...upcomingReleases,
   {
     id: 'r4',
     title: 'Не Отпускай',
@@ -146,7 +149,7 @@ export const releases: Release[] = [
       yandex: 'https://music.yandex.ru/',
     },
     description:
-      'Воздушная аранжировка, много эхо и фортепиано. Любимый трек нашей аудитории.',
+      'Воздушное звучание, много эхо и фортепиано. Любимый трек нашей аудитории.',
   },
   {
     id: 'r8',

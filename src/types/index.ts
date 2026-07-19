@@ -33,6 +33,48 @@ export interface Release {
   currentStage?: number
 }
 
+// ---------- Примеры адаптаций текстов ----------
+
+/** Одна строка / строфа в параллельном сравнении оригинала и адаптации. */
+export interface AdaptationLine {
+  /** Оригинальная строка (на языке оригинала) */
+  original: string
+  /** Строка на русском в нашей адаптации */
+  adapted: string
+  /**
+   * Короткая пометка «что тут сделали» (опционально).
+   * Например: «сохранили ритм», «сменили рифму», «добавили образ».
+   * Если null — просто параллельная строка без акцента.
+   */
+  note?: string | null
+  /** Тип акцента для визуала (опционально). null/undefined = обычная строка. */
+  highlight?: 'rhyme' | 'rhythm' | 'meaning' | 'image' | null
+}
+
+export interface AdaptationVerse {
+  /** Подзаголовок фрагмента: «Куплет 1», «Припев», «Бридж» и т.п. */
+  label: string
+  lines: AdaptationLine[]
+}
+
+export interface AdaptationExample {
+  id: string
+  /** Русское название нашего кавера */
+  title: string
+  /** Оригинальный исполнитель и трек */
+  originalArtist: string
+  /** Язык оригинала (для подписи колонки) */
+  originalLang: string
+  /** Год оригинального трека (опционально) */
+  year?: number
+  /** Короткий анонс: о чём фрагмент и что в нём интересного */
+  teaser: string
+  /** Несколько параллельных фрагментов */
+  verses: AdaptationVerse[]
+  /** Опционально: ссылка на готовый релиз */
+  releaseId?: string
+}
+
 export interface Service {
   id: string
   title: string
