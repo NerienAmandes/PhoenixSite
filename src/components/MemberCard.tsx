@@ -1,7 +1,5 @@
-import { Link } from 'react-router-dom'
-import { ArrowUpRight } from 'lucide-react'
-import type { Member } from '../types'
 import { MessageCircle, Send, Instagram, Youtube } from 'lucide-react'
+import type { Member } from '../types'
 
 const socialIcon = {
   vk: MessageCircle,
@@ -59,12 +57,6 @@ export default function MemberCard({ member, index = 0 }: Props) {
               </a>
             )
           })}
-          <Link
-            to="/join"
-            className="ml-auto inline-flex items-center gap-1 text-xs tracking-[0.2em] uppercase text-accent hover:underline"
-          >
-            Пригласить <ArrowUpRight size={12} />
-          </Link>
         </div>
       </div>
     </article>
