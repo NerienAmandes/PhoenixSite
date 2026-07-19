@@ -24,7 +24,7 @@ export const upcomingReleases: Release[] = [
     id: 'u1',
     title: 'I Really Want to Stay At Your House',
     originalArtist: "Rosa Walton (Let's Eat Grandma)",
-    cover: 'https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=800&auto=format&fit=crop', // Cyberpunk neon vibe
+    cover: cover('I Really Want to Stay At Your House', 60),
     releaseDate: '2026-09-01',
     status: 'upcoming',
     platforms: {
@@ -37,7 +37,7 @@ export const upcomingReleases: Release[] = [
     id: 'u2',
     title: 'Back to Life',
     originalArtist: 'HAN',
-    cover: 'https://images.unsplash.com/photo-1614680376593-902f74a936c2?q=80&w=800&auto=format&fit=crop', // Dark moody star vibe
+    cover: cover('Back to Life', 100),
     releaseDate: '2026-10-01',
     status: 'upcoming',
     platforms: {
@@ -50,7 +50,7 @@ export const upcomingReleases: Release[] = [
     id: 'u3',
     title: 'Catch',
     originalArtist: 'Yena',
-    cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop', // Pop rock concert vibe
+    cover: cover('Catch', 140),
     releaseDate: '2026-11-01',
     status: 'upcoming',
     platforms: {
@@ -63,7 +63,7 @@ export const upcomingReleases: Release[] = [
     id: 'u4',
     title: 'Test me!',
     originalArtist: 'Xdinary Heroes',
-    cover: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?q=80&w=800&auto=format&fit=crop', // Rock band vibe
+    cover: cover('Test me!', 200),
     releaseDate: '2026-12-01',
     status: 'upcoming',
     platforms: {
@@ -76,7 +76,7 @@ export const upcomingReleases: Release[] = [
     id: 'u5',
     title: 'Candy Scar (Zombie Stage ROUND 1)',
     originalArtist: 'VIVINOS / Rubyeye · C!naH',
-    cover: 'https://images.unsplash.com/photo-1518834107812-67b0b7c58434?q=80&w=800&auto=format&fit=crop', // Dark stage with pink/red neon vibe
+    cover: cover('Candy Scar Zombie Stage Round 1', 320),
     releaseDate: '2027-01-15',
     status: 'upcoming',
     platforms: {
