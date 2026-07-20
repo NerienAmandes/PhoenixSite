@@ -233,7 +233,7 @@ export default function ServicesLyricsPage() {
               <div className="text-sm tracking-[0.3em] uppercase text-accent">
                 Факторы цены
               </div>
-              <h3 className="font-display text-3xl leading-tight">Когда стоит выше</h3>
+              <h3 className="font-display text-3xl leading-tight">Когда цена становится выше</h3>
             </div>
           </div>
           <p className="mt-5 text-lg text-muted leading-relaxed">

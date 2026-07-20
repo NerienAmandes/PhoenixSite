@@ -23,20 +23,20 @@ export default function HomePage() {
             <div className="lg:col-span-7">
               <div className="reveal reveal-1">
                 <span className="tag">
-                  <Flame size={12} /> Кавер-группа · Москва
+                  <Flame size={12} /> Международная · кавер - команда
                 </span>
               </div>
               <h1 className="reveal reveal-2 mt-7 font-display text-[64px] sm:text-[88px] lg:text-[112px] leading-[1.35] tracking-tight">
-                Музыка,
+                Мы те,
                 <br />
-                в которой
+                кто живёт
                 <br />
-                <span className="text-fire">горишь.</span>
+                <span className="text-fire">музыкой.</span>
               </h1>
               <p className="reveal reveal-3 mt-7 max-w-xl text-lg text-muted">
-                FirePhoenix — кавер-группа, которая превращает любимые хиты в
-                живые истории на русском. Почти 7 лет каверов, семь
-                музыкантов, один огонь внутри.
+                FirePhoenix — кавер-команда, которая превращает любимые хиты в
+                живые истории на русском. Наша команда живёт музыкой и радует тех, кто разделяет эту любовь вместе с нами.
+                 Почти 7 лет каверов, 7 лет ярких воспоминаний и стремлений.
               </p>
               <div className="reveal reveal-4 mt-9 flex flex-wrap gap-3">
                 <a

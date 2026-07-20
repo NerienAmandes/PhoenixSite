@@ -50,7 +50,7 @@ export default function VacancyItem({ vacancy, index = 0 }: Props) {
                 </li>
               ))}
             </ul>
-            <div className="mt-5 surface-soft p-4 text-sm">
+            <div className="mt-5 surface-soft p-4 text-sm whitespace-pre-line">
               <div className="text-[10px] tracking-[0.3em] uppercase text-muted mb-1">
                 Условия
               </div>

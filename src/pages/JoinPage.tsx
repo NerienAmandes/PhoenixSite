@@ -108,8 +108,8 @@ export default function JoinPage() {
         <span className="text-fire">единомышленников</span>
       </h1>
       <p className="reveal reveal-3 mt-6 max-w-2xl text-lg text-muted">
-        Если ты горишь живой музыкой так же, как мы — оставь отклик. Возможно,
-        именно ты станешь частью FirePhoenix.
+        Мы всегда рады новым фениксам в нашей команде! Присоединяйся!
+Мы ищем: вокалистов, текстовиков, тюнотаймеров, звукарей, художников, виддеров и ребят в отдел медиа.
       </p>
 
       <div className="mt-12 grid gap-4">
@@ -122,15 +122,14 @@ export default function JoinPage() {
         <div className="lg:col-span-5">
           <h2 className="font-display text-4xl sm:text-5xl">Откликнуться</h2>
           <p className="mt-4 text-muted max-w-md">
-            Расскажите немного о себе и пришлите ссылку на портфолио. Мы
-            свяжемся с вами, если увидим совпадение.
+            Если горишь живой музыкой так же, как мы  — оставь отклик. Возможно, именно ты станешь частью Fire Phoenix Team .
           </p>
           <div className="mt-6 surface-soft p-5 text-sm">
             <div className="text-[10px] tracking-[0.3em] uppercase text-muted mb-2">
               Что мы ценим
             </div>
             <ul className="grid gap-1.5">
-              <li>· Любовь к живым выступлениям</li>
+              <li>· Любовь к музыке</li>
               <li>· Ответственность и пунктуальность</li>
               <li>· Умение слышать коллег</li>
               <li>· Готовность расти вместе</li>
@@ -145,8 +144,8 @@ export default function JoinPage() {
                 <Check size={14} strokeWidth={3} />
               </div>
               <div>
-                <div className="font-medium">Отклик отправлен!</div>
-                <div className="text-muted">Спасибо! Мы рассмотрим вашу заявку в ближайшие дни.</div>
+                <div className="font-medium">Заявка отправлена!</div>
+                <div className="text-muted">Спасибо! Мы рассмотрим вашу заявку в течение 24-х часов.</div>
               </div>
             </div>
           )}
@@ -221,7 +220,7 @@ export default function JoinPage() {
               <textarea
                 value={form.experience}
                 onChange={(e) => setForm({ ...form, experience: e.target.value })}
-                placeholder="Где играли, на каких площадках, в каких коллективах..."
+                placeholder="В каких коллективах состояли до этого, какой опыт в создании каверов..."
                 className="mt-2"
               />
               {errors.experience && <p className="mt-1.5 text-xs text-accent">{errors.experience}</p>}
@@ -255,7 +254,7 @@ export default function JoinPage() {
               </>
             ) : (
               <>
-                Отправить отклик <ArrowUpRight size={14} />
+                Отправить заявку <ArrowUpRight size={14} />
               </>
             )}
           </button>

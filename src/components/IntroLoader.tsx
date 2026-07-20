@@ -96,7 +96,7 @@ export default function IntroLoader() {
             className="mt-3 text-sm sm:text-base tracking-[0.5em] uppercase text-muted"
             style={{ animation: 'fpSubIn 0.9s 0.7s cubic-bezier(0.22, 1, 0.36, 1) both' }}
           >
-            cover band · moscow
+            cover team · international
           </div>
         </div>
 
