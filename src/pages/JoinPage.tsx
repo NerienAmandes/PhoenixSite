@@ -230,9 +230,12 @@ export default function JoinPage() {
               <input
                 value={form.portfolio}
                 onChange={(e) => setForm({ ...form, portfolio: e.target.value })}
-                placeholder="https://soundcloud.com/... или YouTube"
+                placeholder="YouTube, Google Drive, Яндекс.Диск — в любом удобном формате"
                 className="mt-2"
               />
+              <p className="mt-1.5 text-xs text-muted">
+                Можно прикрепить одну ссылку или несколько — через запятую или с новой строки. Подойдёт любое облако, облачное хранилище или видеохостинг.
+              </p>
             </div>
             {/* Honeypot — невидимое поле против ботов. Не удаляй! */}
             <input
