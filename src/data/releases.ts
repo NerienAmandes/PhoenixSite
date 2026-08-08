@@ -83,7 +83,18 @@ export const upcomingReleases: Release[] = [
       youtube: 'https://www.youtube.com/watch?v=giV5T1U4NyI' // ID from search
     },
     description: 'Тот самый Zombie Stage Round 1 (Mizi vs Sua).',
-    currentStage: 7, // 7 = Арт (если требуется). Текст(0) и Вокал(2) готовы, сведения и видео нет.
+    currentStage: 9, // 9 = Монтаж видео: готовится видео.
+  },
+  {
+    id: 'u6',
+    title: 'Shadow Shadow',
+    originalArtist: 'Project Sekai',
+    cover: cover('Shadow Shadow Project Sekai', 360),
+    releaseDate: '2027-03-01',
+    status: 'upcoming',
+    platforms: {},
+    description: 'Shadow Shadow из Project Sekai — готовим русскую адаптацию.',
+    currentStage: 7, // 7 = Арт: сведение готово, сейчас готовится арт.
   },
 ]
 

@@ -5,13 +5,20 @@ export interface Social {
   youtube?: string
 }
 
-export type MemberCategory = 'vocals' | 'sound' | 'art' | 'video' | 'admin'
+export type MemberCategory =
+  | 'vocals'
+  | 'sound'
+  | 'art'
+  | 'video'
+  | 'translators'
+  | 'admin'
 
 export const MEMBER_CATEGORIES: { id: MemberCategory; label: string }[] = [
   { id: 'vocals', label: 'Вокалисты' },
   { id: 'sound', label: 'Звукари' },
   { id: 'art', label: 'Художники' },
   { id: 'video', label: 'Видеомонтажёры' },
+  { id: 'translators', label: 'Переводчики' },
   { id: 'admin', label: 'Администрация' },
 ]
 
@@ -25,9 +32,7 @@ const TAG_TO_CATEGORY: Record<string, MemberCategory> = {
   'звукарь': 'sound',
   'художник': 'art',
   'монтажер': 'video',
-  // Отдел переводчиков в команде курируется администрацией,
-  // поэтому «переводчик» маппится в категорию «Администрация».
-  'переводчик': 'admin',
+  'переводчик': 'translators',
 }
 
 export function getMemberCategories(tags: string[]): MemberCategory[] {

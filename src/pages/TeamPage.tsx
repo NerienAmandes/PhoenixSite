@@ -15,6 +15,7 @@ const grouped: Record<MemberCategory, typeof members> = {
   sound: [],
   art: [],
   video: [],
+  translators: [],
   admin: [],
 }
 for (const m of members) {
