@@ -1,4 +1,4 @@
-import { MessageCircle, Send, Instagram, Youtube } from 'lucide-react'
+import { MessageCircle, Send, Instagram, Youtube, Calendar } from 'lucide-react'
 import type { Member } from '../types'
 
 const socialIcon = {
@@ -6,6 +6,12 @@ const socialIcon = {
   telegram: Send,
   instagram: Instagram,
   youtube: Youtube,
+}
+
+/** Берём первый «словный» символ ника и делаем из него инициал для плейсхолдера. */
+function getInitial(name: string): string {
+  const first = name.trim().charAt(0).toUpperCase()
+  return first || '?'
 }
 
 interface Props {
@@ -22,15 +28,22 @@ export default function MemberCard({ member, index = 0 }: Props) {
       <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-fire opacity-30 blur-3xl group-hover:opacity-50 transition-opacity" />
       <div className="p-6 sm:p-7 relative">
         <div className="relative inline-block">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden ring-2 ring-offset-4 ring-offset-elevated"
+          <div
+            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden ring-2 ring-offset-4 ring-offset-elevated"
             style={{ boxShadow: '0 0 0 3px var(--accent-primary), 0 0 0 6px var(--bg-elevated)' }}
           >
-            <img
-              src={member.avatar}
-              alt={member.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
+            {member.avatar ? (
+              <img
+                src={member.avatar}
+                alt={member.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-full h-full bg-fire flex items-center justify-center text-white font-display text-3xl sm:text-4xl">
+                {getInitial(member.name)}
+              </div>
+            )}
           </div>
         </div>
         <div className="mt-5">
@@ -38,7 +51,29 @@ export default function MemberCard({ member, index = 0 }: Props) {
             {member.role}
           </div>
           <h3 className="font-display text-2xl leading-tight">{member.name}</h3>
-          <p className="mt-3 text-sm text-muted leading-relaxed">{member.bio}</p>
+          {member.bio && (
+            <p className="mt-3 text-sm text-muted leading-relaxed">{member.bio}</p>
+          )}
+
+          {member.tags.length > 0 && (
+            <ul className="mt-4 flex flex-wrap gap-1.5">
+              {member.tags.map((tag) => (
+                <li
+                  key={tag}
+                  className="px-2 py-0.5 text-[10px] tracking-[0.2em] uppercase rounded-full bg-fireSoft text-accent"
+                >
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {member.birthDate && (
+            <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted">
+              <Calendar size={12} />
+              <span>{member.birthDate}</span>
+            </div>
+          )}
         </div>
         <div className="mt-5 flex items-center gap-2">
           {Object.entries(member.socials).map(([key, url]) => {

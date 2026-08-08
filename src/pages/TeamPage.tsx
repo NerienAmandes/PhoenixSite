@@ -1,7 +1,27 @@
 import { members } from '../data/members'
+import { MEMBER_CATEGORIES, getMemberCategories } from '../types'
+import type { MemberCategory } from '../types'
 import MemberCard from '../components/MemberCard'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { Users } from 'lucide-react'
+
+/**
+ * Сортируем участников по категориям. Один человек может попасть сразу
+ * в несколько секций — это сделано намеренно, чтобы было видно, кто из
+ * «админов» ещё и поёт, а кто из «художников» заодно монтирует.
+ */
+const grouped: Record<MemberCategory, typeof members> = {
+  vocals: [],
+  sound: [],
+  art: [],
+  video: [],
+  admin: [],
+}
+for (const m of members) {
+  for (const cat of getMemberCategories(m.tags)) {
+    grouped[cat].push(m)
+  }
+}
 
 export default function TeamPage() {
   useDocumentTitle('Состав')
@@ -20,10 +40,33 @@ export default function TeamPage() {
         превращаем любимые треки в истории, которые звучат на русском.
       </p>
 
-      <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {members.map((m, i) => (
-          <MemberCard key={m.id} member={m} index={i} />
-        ))}
+      <div className="mt-14 space-y-16">
+        {MEMBER_CATEGORIES.map(({ id, label }) => {
+          const list = grouped[id]
+          return (
+            <section key={id} className="reveal">
+              <div className="flex items-baseline gap-3">
+                <h2 className="font-display text-3xl sm:text-4xl leading-[1.35]">
+                  {label}
+                </h2>
+                <span className="text-[10px] tracking-[0.3em] uppercase text-muted">
+                  {list.length}
+                </span>
+              </div>
+              {list.length > 0 ? (
+                <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {list.map((m, i) => (
+                    <MemberCard key={`${id}-${m.id}`} member={m} index={i} />
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-muted">
+                  Пока никого — открой вакансию, чтобы заполнить отдел.
+                </p>
+              )}
+            </section>
+          )
+        })}
       </div>
     </div>
   )

@@ -5,12 +5,49 @@ export interface Social {
   youtube?: string
 }
 
+export type MemberCategory = 'vocals' | 'sound' | 'art' | 'video' | 'admin'
+
+export const MEMBER_CATEGORIES: { id: MemberCategory; label: string }[] = [
+  { id: 'vocals', label: 'Вокалисты' },
+  { id: 'sound', label: 'Звукари' },
+  { id: 'art', label: 'Художники' },
+  { id: 'video', label: 'Видеомонтажёры' },
+  { id: 'admin', label: 'Администрация' },
+]
+
+/**
+ * Маппинг тегов участника в категории для сортировки на странице «Состав».
+ * Используется в `getMemberCategories` ниже.
+ */
+const TAG_TO_CATEGORY: Record<string, MemberCategory> = {
+  'вокалист': 'vocals',
+  'админ': 'admin',
+  'звукарь': 'sound',
+  'художник': 'art',
+  'монтажер': 'video',
+  // Отдел переводчиков в команде курируется администрацией,
+  // поэтому «переводчик» маппится в категорию «Администрация».
+  'переводчик': 'admin',
+}
+
+export function getMemberCategories(tags: string[]): MemberCategory[] {
+  const cats = new Set<MemberCategory>()
+  for (const tag of tags) {
+    const cat = TAG_TO_CATEGORY[tag.toLowerCase()]
+    if (cat) cats.add(cat)
+  }
+  return Array.from(cats)
+}
+
 export interface Member {
   id: string
   name: string
   role: string
+  tags: string[]
+  /** Дата рождения в формате «DD.MM» (без года). */
+  birthDate: string
   bio: string
-  avatar: string
+  avatar?: string
   socials: Social
 }
 
