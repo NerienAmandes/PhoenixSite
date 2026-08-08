@@ -76,6 +76,7 @@ export const members: Member[] = [
     tags: ['вокалист', 'монтажер'],
     birthDate: '03.11',
     bio: '',
+    avatar: '/members/miwiy.jpg',
     socials: {},
   },
   {
@@ -112,6 +113,7 @@ export const members: Member[] = [
     tags: ['вокалист'],
     birthDate: '10.03',
     bio: '',
+    avatar: '/members/yuonginsk.jpg',
     socials: {},
   },
   {
@@ -121,6 +123,7 @@ export const members: Member[] = [
     tags: ['вокалист', 'монтажер'],
     birthDate: '31.01',
     bio: '',
+    avatar: '/members/yukishinara.png',
     socials: {},
   },
   {
@@ -218,8 +221,8 @@ export const members: Member[] = [
   {
     id: 'l-fine',
     name: 'L-Fine',
-    role: 'переводчик',
-    tags: ['переводчик'],
+    role: 'переводчик, звукарь',
+    tags: ['переводчик', 'звукарь'],
     birthDate: '28.06',
     bio: '',
     socials: {},
