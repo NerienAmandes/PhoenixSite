@@ -27,7 +27,7 @@ export const members: Member[] = [
     role: 'глава и основатель',
     tags: ['админ', 'вокалист', 'звукарь', 'монтажер'],
     birthDate: '29.04',
-    bio: 'Основатель FirePhoenix. Запевает, сводит, монтирует — и ведёт команду с 2019 года.',
+    bio: 'Основатель FirePhoenix. Поёт, сводит, монтирует — и ведёт команду с 2019 года.',
     avatar: '/members/gilt-majere.jpg',
     socials: {
       telegram: 'https://t.me/',
