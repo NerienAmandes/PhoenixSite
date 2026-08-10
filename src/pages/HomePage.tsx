@@ -86,14 +86,17 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div>
-                  <div className="font-display text-3xl text-fire inline-flex items-center gap-1.5">
-                    <Eye size={18} className="opacity-80" />
+                  <div
+                    className="font-display text-3xl text-fire"
+                    title={ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
+                  >
                     {formatNumber(views)}
                   </div>
                   <div
-                    className="text-[10px] tracking-[0.3em] uppercase text-muted min-h-[1.5em]"
+                    className="text-[10px] tracking-[0.3em] uppercase text-muted min-h-[1.5em] inline-flex items-center gap-1.5"
                     title={ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
                   >
+                    <Eye size={12} className="opacity-80" />
                     просмотров{ytStats ? ` · ${formatAge(ageSeconds)}` : ''}
                   </div>
                 </div>
