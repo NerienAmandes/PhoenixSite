@@ -133,11 +133,26 @@ const milestones = [
   {
     date: '17.07.2026',
     year: '2026',
-    title: '873 подписчика',
-    text: 'Набрали 873 подписчика на нашем YouTube-канале.',
+    title: 'Подписчики',
     isCurrent: true,
   },
 ]
+
+/**
+ * Склоняет «подписчик / подписчика / подписчиков» по числу.
+ *  1, 21, 31, …     → «подписчик»
+ *  2-4, 22-24, …    → «подписчика»
+ *  0, 5-20, 25-30,… → «подписчиков»
+ *  11-14 — исключение, всегда «подписчиков».
+ */
+function pluralizeSubs(n: number): string {
+  const abs = Math.abs(n) % 100
+  if (abs >= 11 && abs <= 14) return 'подписчиков'
+  const last = abs % 10
+  if (last === 1) return 'подписчик'
+  if (last >= 2 && last <= 4) return 'подписчика'
+  return 'подписчиков'
+}
 
 const gallery = [
   'https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=Cover%20band%20rehearsal%20in%20cozy%20living%20room%2C%20guitars%20and%20laptop%20with%20audio%20waveform%2C%20warm%20orange%20lamp%20light%2C%20analog%20film%20look&image_size=landscape_4_3',
@@ -389,7 +404,17 @@ export default function AboutPage() {
         <div className="mt-8 relative">
           <div className="absolute left-[19px] top-2 bottom-2 w-px bg-fire opacity-40" />
           <ol className="grid gap-6 sm:gap-7">
-            {milestones.map((m, i) => (
+            {milestones.map((m, i) => {
+              // Для «текущего» milestone подставляем живые цифры
+              // из YouTube-статистики, чтобы блок «Сейчас» не пустовал.
+              const currentText = m.isCurrent
+                ? ytStats
+                  ? ytStats.hiddenSubscribers
+                    ? 'Канал скрыл количество подписчиков'
+                    : `С нами уже ${formatNumber(ytStats.subscribers)} ${pluralizeSubs(ytStats.subscribers)}`
+                  : 'Подгружаем статистику…'
+                : m.text
+              return (
               <li
                 key={m.date}
                 className="relative pl-14 reveal"
@@ -416,10 +441,11 @@ export default function AboutPage() {
                   )}
                 </div>
                 <p className="text-base sm:text-lg leading-relaxed text-muted mt-1">
-                  {m.text}
+                  {currentText}
                 </p>
               </li>
-            ))}
+              )
+            })}
           </ol>
         </div>
       </section>
