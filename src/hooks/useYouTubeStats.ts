@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
 
 export interface YouTubeStats {
+  /**
+   * Количество подписчиков. `-1` означает, что канал скрыл счётчик
+   * (`hiddenSubscriberCount: true` в YouTube Data API) — в этом случае
+   * показываем «—» вместо числа.
+   */
   subscribers: number
   views: number
   videoCount: number
   channelId: string | null
   handle: string
   fetchedAt: string
+  hiddenSubscribers?: boolean
 }
 
 interface State {

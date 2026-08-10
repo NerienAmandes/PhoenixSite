@@ -20,7 +20,9 @@ export default function HomePage() {
   const { data: ytStats, ageSeconds } = useYouTubeStats()
   // Пока API не ответило, держим цифру из ТЗ как фоллбэк, чтобы не дёргать вёрстку
   const views = ytStats?.views ?? 352212
+  // -1 от API означает, что канал скрыл счётчик подписчиков. До ответа API — 0.
   const subscribers = ytStats?.subscribers ?? 0
+  const subsHidden = ytStats?.subscribers === -1 || ytStats?.hiddenSubscribers === true
 
   return (
     <div>
@@ -72,15 +74,15 @@ export default function HomePage() {
                 <div>
                   <div
                     className="font-display text-3xl text-fire"
-                    title={ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
+                    title={subsHidden ? 'Канал скрыл количество подписчиков' : ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
                   >
-                    {formatNumber(subscribers)}
+                    {subsHidden ? '—' : formatNumber(subscribers)}
                   </div>
                   <div
                     className="text-[10px] tracking-[0.3em] uppercase text-muted min-h-[1.5em]"
-                    title={ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
+                    title={subsHidden ? 'Канал скрыл количество подписчиков' : ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
                   >
-                    подписчиков{ytStats ? ` · ${formatAge(ageSeconds)}` : ''}
+                    подписчиков
                   </div>
                 </div>
                 <div>
