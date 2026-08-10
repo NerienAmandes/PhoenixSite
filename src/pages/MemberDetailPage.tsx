@@ -86,9 +86,15 @@ function MemberDetailLayout({ member }: Props) {
           </h1>
 
           {member.bio && (
-            <p className="mt-6 text-lg sm:text-xl text-ink-2 leading-relaxed max-w-2xl">
-              {member.bio}
-            </p>
+            <div className="mt-6 text-lg sm:text-xl text-ink-2 leading-relaxed max-w-2xl space-y-4">
+              {member.bio
+                .split(/\n\s*\n/)
+                .map((p) => p.trim())
+                .filter(Boolean)
+                .map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+            </div>
           )}
 
           <div className="mt-7 flex flex-wrap items-center gap-2">
