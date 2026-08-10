@@ -97,7 +97,7 @@ export default function HomePage() {
                     title={ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
                   >
                     <Eye size={12} className="opacity-80" />
-                    просмотров{ytStats ? ` · ${formatAge(ageSeconds)}` : ''}
+                    просмотров
                   </div>
                 </div>
               </div>
