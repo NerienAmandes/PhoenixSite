@@ -19,6 +19,8 @@ import {
   Globe2,
 } from 'lucide-react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useYouTubeStats } from '../hooks/useYouTubeStats'
+import { formatNumber, formatAge } from '../utils/formatters'
 
 function TikTokIcon({ size = 20 }: { size?: number }) {
   return (
@@ -148,6 +150,7 @@ const gallery = [
 
 export default function AboutPage() {
   useDocumentTitle('О группе')
+  const { data: ytStats, ageSeconds } = useYouTubeStats()
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
       {/* Hero */}
@@ -176,6 +179,66 @@ export default function AboutPage() {
         часть нашей жизни — <span className="text-ink font-medium">музыка</span>.
         Горячо любим своё дело и готовы согревать ваши сердца нашим творчеством.
       </p>
+
+      {/* Live YouTube stats */}
+      <div className="reveal reveal-3 mt-8 surface p-6 sm:p-7 relative overflow-hidden">
+        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-fire opacity-20 blur-3xl" />
+        <div className="relative flex items-center gap-2 mb-5">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent" />
+          </span>
+          <div className="text-[10px] tracking-[0.3em] uppercase text-accent">
+            Прямой эфир · YouTube
+          </div>
+          {ytStats && (
+            <div
+              className="text-[10px] tracking-[0.2em] uppercase text-muted ml-auto"
+              title={new Date(ytStats.fetchedAt).toLocaleString('ru-RU')}
+            >
+              обновлено {formatAge(ageSeconds)}
+            </div>
+          )}
+        </div>
+        <div className="relative grid gap-4 sm:grid-cols-3">
+          <div>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
+              Подписчики
+            </div>
+            <div className="font-display text-3xl sm:text-4xl text-fire mt-1">
+              {ytStats ? formatNumber(ytStats.subscribers) : '—'}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
+              Просмотры
+            </div>
+            <div className="font-display text-3xl sm:text-4xl text-fire mt-1">
+              {ytStats ? formatNumber(ytStats.views) : '—'}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
+              Видео на канале
+            </div>
+            <div className="font-display text-3xl sm:text-4xl text-fire mt-1">
+              {ytStats ? formatNumber(ytStats.videoCount) : '—'}
+            </div>
+          </div>
+        </div>
+        {ytStats?.handle && (
+          <a
+            href={`https://youtube.com/${ytStats.handle}`}
+            target="_blank"
+            rel="noreferrer"
+            className="relative mt-5 inline-flex items-center gap-2 text-sm text-accent hover:opacity-80 transition-opacity"
+          >
+            <Youtube size={14} />
+            Открыть канал {ytStats.handle}
+            <ArrowUpRight size={12} />
+          </a>
+        )}
+      </div>
 
       {/* Stats */}
       <div className="reveal reveal-4 mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,15 +1,20 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, Play, Flame } from 'lucide-react'
+import { ArrowUpRight, Play, Flame, Eye } from 'lucide-react'
 import { releases } from '../data/releases'
 import { services } from '../data/services'
 import ReleaseCard from '../components/ReleaseCard'
 import ServiceCard from '../components/ServiceCard'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useYouTubeStats } from '../hooks/useYouTubeStats'
+import { formatNumber, formatAge } from '../utils/formatters'
 
 export default function HomePage() {
   useDocumentTitle('Главная')
   // Показываем все предстоящие релизы (до 6 штук), чтобы Zombie Stage тоже был виден
   const upcoming = releases.filter((r) => r.status === 'upcoming').slice(0, 6)
+  const { data: ytStats, ageSeconds } = useYouTubeStats()
+  // Пока API не ответило, держим цифру из ТЗ как фоллбэк, чтобы не дёргать вёрстку
+  const views = ytStats?.views ?? 352212
 
   return (
     <div>
@@ -52,18 +57,30 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="reveal reveal-5 mt-12 grid grid-cols-3 gap-6 max-w-md">
-                {[
-                  { v: '~7', l: 'лет каверов' },
-                  { v: '0', l: 'концертов' },
-                  { v: '352 212', l: 'просмотров' },
-                ].map((s) => (
-                  <div key={s.l}>
-                    <div className="font-display text-3xl text-fire">{s.v}</div>
-                    <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
-                      {s.l}
-                    </div>
+                <div>
+                  <div className="font-display text-3xl text-fire">~7</div>
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
+                    лет каверов
                   </div>
-                ))}
+                </div>
+                <div>
+                  <div className="font-display text-3xl text-fire">0</div>
+                  <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
+                    концертов
+                  </div>
+                </div>
+                <div>
+                  <div className="font-display text-3xl text-fire inline-flex items-center gap-1.5">
+                    <Eye size={18} className="opacity-80" />
+                    {formatNumber(views)}
+                  </div>
+                  <div
+                    className="text-[10px] tracking-[0.3em] uppercase text-muted"
+                    title={ytStats ? `Обновлено ${formatAge(ageSeconds)}` : undefined}
+                  >
+                    просмотров{ytStats ? ` · ${formatAge(ageSeconds)}` : ''}
+                  </div>
+                </div>
               </div>
             </div>
 
