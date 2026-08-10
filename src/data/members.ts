@@ -131,7 +131,7 @@ export const members: Member[] = [
     tags: ['вокалист', 'монтажер'],
     birthDate: '31.01',
     bio: 'Вокалистка с японским образованием вокала и чуткий монтажёр. Делает лирик-видео сама.',
-    avatar: '/members/yukishinara.png',
+    avatar: '/members/yukishinara.jpg',
     socials: {},
   },
   {
@@ -221,7 +221,7 @@ export const members: Member[] = [
     tags: ['художник', 'админ'],
     birthDate: '04.08',
     bio: 'Рисует в мультяшной, чуть мрачной стилистике. Каждая обложка — маленькая история.',
-    avatar: '/members/gnom-sovy.jpg',
+    avatar: '/members/anil.jpg',
     socials: {},
   },
   {
