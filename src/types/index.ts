@@ -73,6 +73,8 @@ export interface Release {
   platforms: ReleasePlatforms
   description: string
   currentStage?: number
+  /** ID участников, которые поработали над релизом (вокалисты, звукари, художники и т.д.). */
+  credits?: string[]
 }
 
 // ---------- Примеры адаптаций текстов ----------

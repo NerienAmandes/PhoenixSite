@@ -32,6 +32,7 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Описание готовится.',
     currentStage: 0,
+    credits: ['fa1afe1', 'karki-05', 'lisme-s', 'relierfix', 'gnom-sovy', 'miwiy'],
   },
   {
     id: 'u2',
@@ -45,6 +46,7 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Описание готовится.',
     currentStage: 10,
+    credits: ['nixel04044', 'linapem', 'rey', 'gilt-majere', 'mizumi', 'yukishinara'],
   },
   {
     id: 'u3',
@@ -58,6 +60,7 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Описание готовится.',
     currentStage: 10,
+    credits: ['yuonginsk', 'rain432', 'l-fine', 'relierfix', 'myr-nita', 'myatlik'],
   },
   {
     id: 'u4',
@@ -71,6 +74,7 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Описание готовится.',
     currentStage: 11,
+    credits: ['adam-grouse', 'urienkl', 'melissa', 'l-fine', 'svarshchik', 'gilt-majere'],
   },
   {
     id: 'u5',
@@ -84,6 +88,7 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Тот самый Zombie Stage Round 1 (Mizi vs Sua).',
     currentStage: 9, // 9 = Монтаж видео: готовится видео.
+    credits: ['enot-diosterigo', 'zhu-zhen', 'karki-05', 'gilt-majere', 'gnom-sovy', 'miwiy'],
   },
   {
     id: 'u6',
@@ -95,6 +100,7 @@ export const upcomingReleases: Release[] = [
     platforms: {},
     description: 'Shadow Shadow из Project Sekai — готовим русскую адаптацию.',
     currentStage: 7, // 7 = Арт: сведение готово, сейчас готовится арт.
+    credits: ['yukishinara', 'afis', 'lisme-s', 'relierfix', 'mizumi', 'melissa'],
   },
 ]
 
@@ -117,6 +123,7 @@ export const releases: Release[] = [
     },
     description:
       'Самый сильный трек на сегодня. Более 200 тысяч прослушиваний за первый месяц.',
+    credits: ['rain432', 'miwiy', 'rey', 'l-fine', 'mizumi', 'yukishinara'],
   },
   {
     id: 'r5',
@@ -132,6 +139,7 @@ export const releases: Release[] = [
     },
     description:
       'Дерзкая подача, фанковые клавиши и много движения. Идеально для концертной программы.',
+    credits: ['marinllen', 'yuonginsk', 'lisme-s', 'relierfix', 'myr-nita', 'myatlik'],
   },
   {
     id: 'r6',
@@ -147,6 +155,7 @@ export const releases: Release[] = [
     },
     description:
       'Лирический кавер, в котором вокал Алины звучит пронзительнее оригинала. Наш первый «миллионник».',
+    credits: ['nixel04044', 'lisme-s', 'melissa', 'gilt-majere', 'svarshchik', 'miwiy'],
   },
   {
     id: 'r7',
@@ -161,6 +170,7 @@ export const releases: Release[] = [
     },
     description:
       'Воздушное звучание, много эхо и фортепиано. Любимый трек нашей аудитории.',
+    credits: ['fa1afe1', 'karki-05', 'rey', 'l-fine', 'gnom-sovy', 'yukishinara'],
   },
   {
     id: 'r8',
@@ -175,5 +185,6 @@ export const releases: Release[] = [
     },
     description:
       'Тяжёлый, ритуальный трек. Один из самых популярных на концертах — зал поёт хором.',
+    credits: ['gilt-majere', 'adam-grouse', 'urienkl', 'lisme-s', 'yumiko', 'relierfix', 'myr-nita', 'myatlik'],
   },
 ]

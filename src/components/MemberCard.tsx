@@ -1,4 +1,5 @@
-import { MessageCircle, Send, Instagram, Youtube, Calendar } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { MessageCircle, Send, Instagram, Youtube, Calendar, ChevronRight } from 'lucide-react'
 import type { Member } from '../types'
 
 const socialIcon = {
@@ -52,12 +53,14 @@ export default function MemberCard({ member, index = 0 }: Props) {
           </div>
           <h3 className="font-display text-2xl leading-tight">{member.name}</h3>
           {member.bio && (
-            <p className="mt-3 text-sm text-muted leading-relaxed">{member.bio}</p>
+            <p className="mt-3 text-sm text-muted leading-relaxed line-clamp-3">
+              {member.bio}
+            </p>
           )}
 
           {member.tags.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-1.5">
-              {member.tags.map((tag) => (
+              {member.tags.slice(0, 3).map((tag) => (
                 <li
                   key={tag}
                   className="px-2 py-0.5 text-[10px] tracking-[0.2em] uppercase rounded-full bg-fireSoft text-accent"
@@ -75,24 +78,41 @@ export default function MemberCard({ member, index = 0 }: Props) {
             </div>
           )}
         </div>
-        <div className="mt-5 flex items-center gap-2">
-          {Object.entries(member.socials).map(([key, url]) => {
-            const Icon = socialIcon[key as keyof typeof socialIcon]
-            if (!Icon || !url) return null
-            return (
-              <a
-                key={key}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-muted hover:text-accent hover:border-accent transition-colors"
-                aria-label={key}
-              >
-                <Icon size={15} />
-              </a>
-            )
-          })}
+        <div className="mt-5 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {Object.entries(member.socials).map(([key, url]) => {
+              const Icon = socialIcon[key as keyof typeof socialIcon]
+              if (!Icon || !url) return null
+              return (
+                <a
+                  key={key}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-muted hover:text-accent hover:border-accent transition-colors"
+                  aria-label={key}
+                >
+                  <Icon size={15} />
+                </a>
+              )
+            })}
+          </div>
+          <Link
+            to={`/team/${member.id}`}
+            className="inline-flex items-center gap-1 text-xs tracking-[0.2em] uppercase text-accent opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all"
+            aria-label={`Подробнее о ${member.name}`}
+          >
+            Подробнее
+            <ChevronRight size={14} />
+          </Link>
         </div>
+        {/* Кликабельная зона — покрывает всю карточку, кроме соц. иконок */}
+        <Link
+          to={`/team/${member.id}`}
+          aria-label={`Открыть карточку ${member.name}`}
+          className="absolute inset-0 z-0"
+        />
       </div>
     </article>
   )

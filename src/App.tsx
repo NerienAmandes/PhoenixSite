@@ -4,6 +4,7 @@ import ThemeBoot from './components/ThemeBoot'
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
 import TeamPage from './pages/TeamPage'
+import MemberDetailPage from './pages/MemberDetailPage'
 import ReleasesPage from './pages/ReleasesPage'
 import ServicesHubPage from './pages/ServicesHubPage'
 import ServicesLyricsPage from './pages/ServicesLyricsPage'
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/team" element={<TeamPage />} />
+          <Route path="/team/:memberId" element={<MemberDetailPage />} />
           <Route path="/releases" element={<ReleasesPage />} />
           <Route path="/services" element={<ServicesHubPage />} />
           <Route path="/services/lyrics" element={<ServicesLyricsPage />} />
