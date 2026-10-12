@@ -1,48 +1,49 @@
 import { useState, useEffect } from 'react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
-import { Youtube, Loader2, Sparkles, X } from 'lucide-react'
+import { Youtube, Loader2, Sparkles, X, Disc3 } from 'lucide-react'
 import ReleaseCard from '../components/ReleaseCard'
 import InlineYouTubePlayer from '../components/InlineYouTubePlayer'
 import { supabase, publicUrl } from '../lib/supabase'
 import type { Release } from '../types'
 
-type Tab = 'covers' | 'upcoming'
+type Tab = 'covers' | 'upcoming' | 'released'
 
 export default function ReleasesPage() {
-  useDocumentTitle('Видео')
-  const [tab, setTab] = useState<Tab>('covers')
-  const [selectedVideo, setSelectedVideo] = useState<{ id: string, title: string, youtubeId: string } | null>(null)
+  useDocumentTitle('Релизы')
+  const [tab, setTab] = useState<Tab>('upcoming')
+  const [selectedVideo, setSelectedVideo] = useState<{
+    id: string
+    title: string
+    youtubeId: string
+  } | null>(null)
 
-  // YouTube хук (оставляем как было, если он работает)
   const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
 
-  // Новое состояние для релизов из БД
   const [dbReleases, setDbReleases] = useState<Release[]>([])
   const [releasesLoading, setReleasesLoading] = useState(true)
 
-  // Загружаем релизы из Supabase при монтировании
   useEffect(() => {
     async function fetchReleases() {
       const { data, error } = await supabase
         .from('releases')
         .select('*')
-        .eq('is_published', true) // Показываем только опубликованные
-        .order('release_date', { ascending: false, nullsFirst: false })
+        .eq('is_published', true)
+        .order('release_date', { ascending: false, nullsFirst: true })
 
       if (!error && data) {
-        // Маппинг: превращаем snake_case из БД в camelCase, который ждёт ReleaseCard
-        // И самое главное: применяем publicUrl() к обложке!
         const mapped = data.map((r: any) => ({
           id: r.slug,
           title: r.title,
           originalArtist: r.original_artist || 'Неизвестный исполнитель',
-          cover: publicUrl(r.cover_url) || '',
-          releaseDate: r.release_date || '', // <-- Добавлен fallback на пустую строку
+          cover: r.cover_url?.startsWith('http')
+            ? r.cover_url
+            : publicUrl(r.cover_url) || '',
+          releaseDate: r.release_date || '',
           status: r.status,
           platforms: r.platforms || {},
           currentStage: r.current_stage ?? 0,
-          description: r.description || '', // <-- Добавлено отсутствующее поле
+          description: r.description || '',
         }))
         setDbReleases(mapped)
       }
@@ -52,42 +53,52 @@ export default function ReleasesPage() {
     fetchReleases()
   }, [])
 
-  // Используем YouTube данные, если они есть, иначе заглушка
-  const portfolio = ytVideos.length > 0
-    ? ytVideos.map((vid) => ({ id: vid.id, title: vid.title, youtubeId: vid.youtubeId }))
-    : [] // Если YouTube API не настроен, лучше показать пусто, чем старые статические данные
+  const portfolio =
+    ytVideos.length > 0
+      ? ytVideos.map((vid) => ({
+        id: vid.id,
+        title: vid.title,
+        youtubeId: vid.youtubeId,
+      }))
+      : []
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'covers', label: 'Каверы' },
-    { id: 'upcoming', label: 'Предстоящие релизы' },
+  const tabs: { id: Tab; label: string; icon?: any }[] = [
+    { id: 'upcoming', label: 'Предстоящие', icon: Sparkles },
+    { id: 'released', label: 'Вышедшие', icon: Disc3 },
+    { id: 'covers', label: 'Каверы', icon: Youtube },
   ]
+
+  const upcomingReleases = dbReleases.filter((r) => r.status === 'upcoming')
+  const releasedReleases = dbReleases.filter((r) => r.status === 'released')
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
       <div className="reveal reveal-1">
-        <span className="tag"><Youtube size={12} /> Портфолио</span>
+        <span className="tag"><Disc3 size={12} /> Релизы</span>
       </div>
       <h1 className="reveal reveal-2 mt-7 font-display text-5xl sm:text-7xl lg:text-8xl leading-[1.35]">
-        Видео и <span className="text-fire">выступления</span>
+        Музыка <span className="text-fire">FirePhoenix</span>
       </h1>
       <p className="reveal reveal-3 mt-6 max-w-2xl text-lg text-muted">
-        Студийные каверы, live-версии и закулисье — собрали всё, что
-        показывает FirePhoenix в движении.
+        Грядущие каверы, уже вышедшие релизы и студийные видео — всё, что
+        создаёт команда.
       </p>
 
       <div className="sticky top-24 z-20 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 mt-10">
         <div className="surface p-1.5 inline-flex flex-wrap gap-1 mb-8 backdrop-blur">
           {tabs.map((t) => {
             const active = tab === t.id
+            const Icon = t.icon
             return (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-5 py-2.5 rounded-xl text-sm tracking-wide transition-all ${active
-                  ? 'bg-fire text-white shadow-glow'
-                  : 'text-muted hover:text-ink'
+                className={`px-5 py-2.5 rounded-xl text-sm tracking-wide transition-all inline-flex items-center gap-2 ${active
+                    ? 'bg-fire text-white shadow-glow'
+                    : 'text-muted hover:text-ink'
                   }`}
               >
+                {Icon && <Icon size={14} />}
                 {t.label}
               </button>
             )
@@ -95,6 +106,7 @@ export default function ReleasesPage() {
         </div>
       </div>
 
+      {/* Вкладка: Каверы (YouTube) */}
       {tab === 'covers' && (
         <>
           {ytLoading && (
@@ -107,7 +119,9 @@ export default function ReleasesPage() {
             <div className="mt-4 p-4 rounded-xl bg-red-100 border border-red-300 text-red-800 text-sm">
               <strong>Ошибка YouTube API:</strong> {ytError}
               <br />
-              <span className="text-xs opacity-70">Проверьте, что API ключ включён и плейлист публичный.</span>
+              <span className="text-xs opacity-70">
+                Проверьте, что API ключ включён и плейлист публичный.
+              </span>
             </div>
           )}
 
@@ -139,7 +153,8 @@ export default function ReleasesPage() {
 
               {portfolio.length === 0 && !ytError && (
                 <div className="mt-12 text-center text-muted">
-                  Каверы загружаются через YouTube API. Если здесь пусто, проверьте настройки API.
+                  Каверы загружаются через YouTube API. Если здесь пусто,
+                  проверьте настройки API.
                 </div>
               )}
             </>
@@ -147,12 +162,13 @@ export default function ReleasesPage() {
         </>
       )}
 
+      {/* Вкладка: Предстоящие */}
       {tab === 'upcoming' && (
         <>
           <div className="surface-soft p-5 sm:p-6 mb-8 text-sm sm:text-base text-muted flex items-start gap-3">
             <Sparkles size={18} className="text-accent shrink-0 mt-0.5" />
             <span>
-              Здесь будут анонсы грядущих каверов. Названия, даты и платформы
+              Здесь анонсы грядущих каверов. Названия, даты и платформы
               обновляются через админку.
             </span>
           </div>
@@ -163,14 +179,40 @@ export default function ReleasesPage() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {dbReleases.map((r, i) => (
+              {upcomingReleases.map((r, i) => (
                 <ReleaseCard key={r.id} release={r} index={i} />
               ))}
             </div>
           )}
 
-          {!releasesLoading && dbReleases.length === 0 && (
-            <div className="mt-12 text-center text-muted">Пока нет анонсированных релизов.</div>
+          {!releasesLoading && upcomingReleases.length === 0 && (
+            <div className="mt-12 text-center text-muted">
+              Пока нет анонсированных релизов.
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Вкладка: Вышедшие */}
+      {tab === 'released' && (
+        <>
+          {releasesLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 size={48} className="animate-spin text-fire" />
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {releasedReleases.map((r, i) => (
+                <ReleaseCard key={r.id} release={r} index={i} />
+              ))}
+            </div>
+          )}
+
+          {!releasesLoading && releasedReleases.length === 0 && (
+            <div className="mt-12 text-center text-muted">
+              Вышедших релизов пока нет. Загляни позже — здесь появятся
+              каверы, которые уже можно послушать.
+            </div>
           )}
         </>
       )}
