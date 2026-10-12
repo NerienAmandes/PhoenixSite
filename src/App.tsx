@@ -14,6 +14,10 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
+import AdminLayout from './admin/AdminLayout'
+import AdminLoginPage from './admin/AdminLoginPage'
+import AdminMembersPage from './admin/AdminMembersPage'
+import AdminReleasesPage from './admin/AdminReleasesPage'
 
 export default function App() {
   return (
@@ -35,6 +39,15 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+
+          {/* Админка (отдельный layout с защитой). */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="members" replace />} />
+            <Route path="members" element={<AdminMembersPage />} />
+            <Route path="releases" element={<AdminReleasesPage />} />
+          </Route>
+
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

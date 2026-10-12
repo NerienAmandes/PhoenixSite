@@ -255,7 +255,11 @@ function MemberDetailLayout({ member }: Props) {
 
 export default function MemberDetailPage() {
   const { memberId } = useParams<{ memberId: string }>()
-  const member = members.find((m) => m.id === memberId)
+  // Двухуровневый поиск: сначала точное совпадение, потом case-insensitive.
+  // Это нужно для URL вроде /team/Misty vs /team/misty (slug в БД хранится в оригинальном регистре).
+  const member =
+    members.find((m) => m.id === memberId) ??
+    members.find((m) => m.id.toLowerCase() === memberId?.toLowerCase())
 
   useDocumentTitle(member ? member.name : 'Участник')
 

@@ -3,7 +3,7 @@ import type { Release } from '../types'
 import { formatDate } from '../utils/formatters'
 import { useFavoritesStore } from '../store/useFavoritesStore'
 
-const UPCOMING_STAGES = [
+export const UPCOMING_STAGES = [
   'Текст готов',
   'Записывается вокал',
   'Вокал готов',

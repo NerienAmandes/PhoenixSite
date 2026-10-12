@@ -60,7 +60,7 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Описание готовится.',
     currentStage: 10,
-    credits: ['yuonginsk', 'rain432', 'l-fine', 'relierfix', 'myr-nita', 'myatlik'],
+    credits: ['Misty', 'rain432', 'l-fine', 'relierfix', 'myr-nita'],
   },
   {
     id: 'u4',
@@ -74,7 +74,7 @@ export const upcomingReleases: Release[] = [
     },
     description: 'Описание готовится.',
     currentStage: 11,
-    credits: ['adam-grouse', 'urienkl', 'melissa', 'l-fine', 'svarshchik', 'gilt-majere'],
+    credits: ['adam-grouse', 'necoria', 'melissa', 'l-fine', 'svarshchik', 'gilt-majere'],
   },
   {
     id: 'u5',
@@ -139,7 +139,7 @@ export const releases: Release[] = [
     },
     description:
       'Дерзкая подача, фанковые клавиши и много движения. Идеально для концертной программы.',
-    credits: ['marinllen', 'yuonginsk', 'lisme-s', 'relierfix', 'myr-nita', 'myatlik'],
+    credits: ['marinllen', 'Misty', 'lisme-s', 'relierfix', 'myr-nita'],
   },
   {
     id: 'r6',
@@ -185,6 +185,6 @@ export const releases: Release[] = [
     },
     description:
       'Тяжёлый, ритуальный трек. Один из самых популярных на концертах — зал поёт хором.',
-    credits: ['gilt-majere', 'adam-grouse', 'urienkl', 'lisme-s', 'yumiko', 'relierfix', 'myr-nita', 'myatlik'],
+    credits: ['gilt-majere', 'adam-grouse', 'necoria', 'lisme-s', 'yumiko', 'relierfix', 'myr-nita'],
   },
 ]

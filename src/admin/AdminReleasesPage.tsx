@@ -1,0 +1,810 @@
+import { useEffect, useMemo, useState } from 'react'
+import { supabase, publicUrl } from '../lib/supabase'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { UPCOMING_STAGES } from '../components/ReleaseCard'
+import {
+  Plus,
+  Trash2,
+  Edit3,
+  Save,
+  X,
+  Upload,
+  Image as ImageIcon,
+} from 'lucide-react'
+
+// ---------- типы ----------
+
+type DbRelease = {
+  id: string
+  slug: string
+  title: string
+  original_artist: string | null
+  cover_url: string | null
+  release_date: string | null
+  status: 'upcoming' | 'released'
+  platforms: {
+    spotify?: string
+    youtube?: string
+    yandex?: string
+    apple?: string
+  }
+  description: string | null
+  current_stage: number
+  is_published: boolean
+}
+
+type DbMemberLite = {
+  id: string
+  slug: string
+  display_name: string
+  avatar_path: string | null
+}
+
+type FormState = {
+  slug: string
+  title: string
+  original_artist: string
+  cover_path: string | null
+  release_date: string // YYYY-MM-DD или пусто
+  status: 'upcoming' | 'released'
+  platforms: {
+    spotify: string
+    youtube: string
+    yandex: string
+    apple: string
+  }
+  description: string
+  current_stage: number
+  is_published: boolean
+  /** выбранные id участников (из public.members.id — это uuid) */
+  creditMemberIds: Set<string>
+}
+
+const emptyForm: FormState = {
+  slug: '',
+  title: '',
+  original_artist: '',
+  cover_path: null,
+  release_date: '',
+  status: 'upcoming',
+  platforms: { spotify: '', youtube: '', yandex: '', apple: '' },
+  description: '',
+  current_stage: 0,
+  is_published: true,
+  creditMemberIds: new Set(),
+}
+
+function formFromDb(r: DbRelease, creditIds: string[]): FormState {
+  return {
+    slug: r.slug,
+    title: r.title,
+    original_artist: r.original_artist ?? '',
+    cover_path: r.cover_url,
+    release_date: r.release_date ?? '',
+    status: r.status,
+    platforms: {
+      spotify: r.platforms?.spotify ?? '',
+      youtube: r.platforms?.youtube ?? '',
+      yandex: r.platforms?.yandex ?? '',
+      apple: r.platforms?.apple ?? '',
+    },
+    description: r.description ?? '',
+    current_stage: r.current_stage ?? 0,
+    is_published: r.is_published,
+    creditMemberIds: new Set(creditIds),
+  }
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9а-яё]+/giu, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64)
+}
+
+// ---------- страница ----------
+
+type View =
+  | { kind: 'list' }
+  | { kind: 'create' }
+  | { kind: 'edit'; id: string }
+
+export default function AdminReleasesPage() {
+  useDocumentTitle('Админка · Релизы')
+  const [view, setView] = useState<View>({ kind: 'list' })
+  const [releases, setReleases] = useState<DbRelease[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = async () => {
+    setLoading(true)
+    setError(null)
+    const { data, error } = await supabase
+      .from('releases')
+      .select('*')
+      .order('release_date', { ascending: false, nullsFirst: false })
+    if (error) {
+      setError(error.message)
+      setReleases([])
+    } else {
+      setReleases((data ?? []) as DbRelease[])
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (view.kind === 'list') void load()
+  }, [view.kind])
+
+  if (view.kind === 'create') {
+    return (
+      <ReleaseForm
+        initial={emptyForm}
+        isNew
+        onCancel={() => setView({ kind: 'list' })}
+        onSaved={() => setView({ kind: 'list' })}
+      />
+    )
+  }
+
+  if (view.kind === 'edit') {
+    const target = releases.find((r) => r.id === view.id)
+    if (!target && !loading) {
+      return (
+        <div>
+          <p className="text-accent">Релиз не найден.</p>
+          <button className="btn mt-4" onClick={() => setView({ kind: 'list' })}>
+            <X size={14} /> Назад к списку
+          </button>
+        </div>
+      )
+    }
+    if (!target) {
+      return <div className="text-muted text-sm">Загрузка…</div>
+    }
+    return (
+      <ReleaseEditor
+        release={target}
+        onCancel={() => setView({ kind: 'list' })}
+        onSaved={() => setView({ kind: 'list' })}
+      />
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+        <h2 className="font-display text-2xl">Релизы ({releases.length})</h2>
+        <button
+          className="btn btn-primary text-sm"
+          onClick={() => setView({ kind: 'create' })}
+        >
+          <Plus size={14} /> Добавить
+        </button>
+      </div>
+
+      {error && (
+        <div className="surface-soft text-sm text-accent p-3 mb-4">{error}</div>
+      )}
+
+      {loading ? (
+        <div className="text-muted text-sm">Загрузка…</div>
+      ) : releases.length === 0 ? (
+        <div className="text-muted text-sm">Пока нет релизов.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-muted border-b border-border">
+              <tr>
+                <th className="py-2 pr-3 font-normal">Обложка</th>
+                <th className="py-2 pr-3 font-normal">Название</th>
+                <th className="py-2 pr-3 font-normal">Slug</th>
+                <th className="py-2 pr-3 font-normal">Статус</th>
+                <th className="py-2 pr-3 font-normal">Дата</th>
+                <th className="py-2 pr-3 font-normal text-right">Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              {releases.map((r) => {
+                const cover = publicUrl(r.cover_url)
+                return (
+                  <tr key={r.id} className="border-b border-border/60">
+                    <td className="py-2 pr-3">
+                      {cover ? (
+                        <img
+                          src={cover}
+                          alt=""
+                          className="w-12 h-12 rounded object-cover bg-deep"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded bg-deep flex items-center justify-center">
+                          <ImageIcon size={16} className="text-muted" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">{r.title}</div>
+                      {r.original_artist && (
+                        <div className="text-xs text-muted">
+                          оригинал: {r.original_artist}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3 font-mono text-xs">{r.slug}</td>
+                    <td className="py-2 pr-3 text-xs">
+                      {r.status === 'released' ? 'вышел' : 'готовится'}
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-muted">
+                      {r.release_date || '—'}
+                    </td>
+                    <td className="py-2 pr-3 text-right whitespace-nowrap">
+                      <button
+                        className="btn text-xs mr-2"
+                        onClick={() => setView({ kind: 'edit', id: r.id })}
+                      >
+                        <Edit3 size={12} /> Изменить
+                      </button>
+                      <button
+                        className="btn text-xs"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Удалить «${r.title}»? Связи в release_credits тоже удалятся.`,
+                            )
+                          ) {
+                            void supabase
+                              .from('releases')
+                              .delete()
+                              .eq('id', r.id)
+                              .then(({ error }) => {
+                                if (error) {
+                                  window.alert('Ошибка: ' + error.message)
+                                } else {
+                                  void load()
+                                }
+                              })
+                          }
+                        }}
+                      >
+                        <Trash2 size={12} /> Удалить
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------- редактор (нужны release + credits + members) ----------
+
+function ReleaseEditor({
+  release,
+  onCancel,
+  onSaved,
+}: {
+  release: DbRelease
+  onCancel: () => void
+  onSaved: () => void
+}) {
+  const [creditIds, setCreditIds] = useState<string[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const { data, error } = await supabase
+        .from('release_credits')
+        .select('member_id')
+        .eq('release_id', release.id)
+      if (cancelled) return
+      if (error) {
+        setError(error.message)
+        setCreditIds([])
+      } else {
+        setCreditIds((data ?? []).map((r) => r.member_id as string))
+      }
+      setLoaded(true)
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [release.id])
+
+  if (!loaded) {
+    return <div className="text-muted text-sm">Загрузка…</div>
+  }
+  if (error) {
+    return <div className="text-accent text-sm">{error}</div>
+  }
+
+  return (
+    <ReleaseForm
+      initial={formFromDb(release, creditIds)}
+      isNew={false}
+      releaseId={release.id}
+      onCancel={onCancel}
+      onSaved={onSaved}
+    />
+  )
+}
+
+// ---------- форма ----------
+
+function ReleaseForm({
+  initial,
+  isNew,
+  releaseId,
+  onCancel,
+  onSaved,
+}: {
+  initial: FormState
+  isNew: boolean
+  releaseId?: string
+  onCancel: () => void
+  onSaved: () => void
+}) {
+  const [form, setForm] = useState<FormState>(initial)
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  // Аватарки, которые не загрузились (битый URL или файла нет в Storage).
+  // Используем Set, чтобы не падать в ререндер при onError.
+  const [brokenAvatars, setBrokenAvatars] = useState<Set<string>>(new Set())
+
+  // Список участников для multi-select credits.
+  const [members, setMembers] = useState<DbMemberLite[]>([])
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const { data } = await supabase
+        .from('members')
+        .select('id, slug, display_name, avatar_path')
+        .order('display_name')
+      if (!cancelled) setMembers((data ?? []) as DbMemberLite[])
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const membersById = useMemo(() => {
+    const m = new Map<string, DbMemberLite>()
+    for (const x of members) m.set(x.id, x)
+    return m
+  }, [members])
+
+  const [slugTouched, setSlugTouched] = useState(!isNew)
+  useEffect(() => {
+    if (!isNew || slugTouched) return
+    setForm((f) => ({ ...f, slug: slugify(f.title) }))
+  }, [form.title, isNew, slugTouched])
+
+  const onPickCover = async (file: File) => {
+    if (!form.slug) {
+      setError('Сначала задай slug — файл сохранится в covers/{slug}.{ext}')
+      return
+    }
+    setUploading(true)
+    setError(null)
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const path = `covers/${form.slug}.${ext}`
+    const { error: upErr } = await supabase.storage
+      .from('media')
+      .upload(path, file, { upsert: true, contentType: file.type })
+    if (upErr) {
+      setError('Не удалось загрузить обложку: ' + upErr.message)
+    } else {
+      setForm((f) => ({ ...f, cover_path: path }))
+    }
+    setUploading(false)
+  }
+
+  const onSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+
+    if (!form.title.trim()) {
+      setError('Название обязательно')
+      return
+    }
+    if (!form.slug.trim()) {
+      setError('Slug обязателен')
+      return
+    }
+    if (form.release_date && !/^\d{4}-\d{2}-\d{2}$/.test(form.release_date)) {
+      setError('Дата должна быть в формате YYYY-MM-DD')
+      return
+    }
+
+    const platforms = {
+      spotify: form.platforms.spotify.trim() || undefined,
+      youtube: form.platforms.youtube.trim() || undefined,
+      yandex: form.platforms.yandex.trim() || undefined,
+      apple: form.platforms.apple.trim() || undefined,
+    }
+
+    const payload = {
+      slug: form.slug.trim(),
+      title: form.title.trim(),
+      original_artist: form.original_artist.trim() || null,
+      cover_url: form.cover_path,
+      release_date: form.release_date || null,
+      status: form.status,
+      platforms,
+      description: form.description.trim() || null,
+      current_stage: Number(form.current_stage) || 0,
+      is_published: form.is_published,
+    }
+
+    setSaving(true)
+
+    // 1) upsert release
+    const { data: upserted, error: upErr } = await supabase
+      .from('releases')
+      .upsert(payload, { onConflict: 'slug' })
+      .select('id')
+      .single()
+    if (upErr || !upserted) {
+      setSaving(false)
+      setError(upErr?.message ?? 'Не удалось сохранить релиз')
+      return
+    }
+    const newReleaseId: string = upserted.id
+
+    // 2) Пересоздаём credits. Сначала удаляем старые.
+    const { error: delErr } = await supabase
+      .from('release_credits')
+      .delete()
+      .eq('release_id', newReleaseId)
+    if (delErr) {
+      setSaving(false)
+      setError('Релиз сохранён, но не удалось очистить credits: ' + delErr.message)
+      return
+    }
+
+    // 3) Вставляем новые.
+    const creditRows = Array.from(form.creditMemberIds).map((memberId) => ({
+      release_id: newReleaseId,
+      member_id: memberId,
+      role_label: null,
+    }))
+    if (creditRows.length > 0) {
+      const { error: insErr } = await supabase
+        .from('release_credits')
+        .insert(creditRows)
+      if (insErr) {
+        setSaving(false)
+        setError('Релиз сохранён, но не удалось сохранить credits: ' + insErr.message)
+        return
+      }
+    }
+
+    setSaving(false)
+    onSaved()
+  }
+
+  const cover = publicUrl(form.cover_path)
+
+  return (
+    <form onSubmit={onSave} className="grid gap-4 max-w-3xl">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-2xl">
+          {isNew ? 'Новый релиз' : `Редактирование: ${form.title}`}
+        </h2>
+        <button type="button" className="btn text-sm" onClick={onCancel}>
+          <X size={14} /> Отмена
+        </button>
+      </div>
+
+      {error && (
+        <div className="surface-soft text-sm text-accent p-3">{error}</div>
+      )}
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+            Название *
+          </label>
+          <input
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            className="mt-2"
+            required
+          />
+        </div>
+        <div>
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+              Slug *
+            </label>
+            {!slugTouched && isNew && (
+              <span className="text-[10px] tracking-wider uppercase text-accent">
+                авто
+              </span>
+            )}
+          </div>
+          <input
+            value={form.slug}
+            onChange={(e) => {
+              setSlugTouched(true)
+              setForm({ ...form, slug: e.target.value })
+            }}
+            className="mt-2 font-mono text-sm"
+            placeholder="например: shadow-shadow"
+            required
+          />
+          <div className="text-xs text-muted mt-1 leading-relaxed">
+            Латиницей, без пробелов. Используется в адресе страницы:{' '}
+            <span className="font-mono text-ink">
+              /releases/{form.slug || '...'}
+            </span>
+            .
+          </div>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+            Оригинальный исполнитель
+          </label>
+          <input
+            value={form.original_artist}
+            onChange={(e) =>
+              setForm({ ...form, original_artist: e.target.value })
+            }
+            className="mt-2"
+          />
+        </div>
+        <div>
+          <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+            Дата релиза (YYYY-MM-DD)
+          </label>
+          <input
+            type="date"
+            value={form.release_date}
+            onChange={(e) => setForm({ ...form, release_date: e.target.value })}
+            className="mt-2"
+          />
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+            Статус
+          </label>
+          <select
+            value={form.status}
+            onChange={(e) =>
+              setForm({ ...form, status: e.target.value as 'upcoming' | 'released' })
+            }
+            className="mt-2"
+          >
+            <option value="upcoming">Готовится (upcoming)</option>
+            <option value="released">Вышел (released)</option>
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+            Этап производства
+          </label>
+          <select
+            value={form.current_stage}
+            onChange={(e) =>
+              setForm({ ...form, current_stage: Number(e.target.value) })
+            }
+            className="mt-2"
+          >
+            {UPCOMING_STAGES.map((stage, idx) => (
+              <option key={idx} value={idx}>
+                {idx}. {stage}
+              </option>
+            ))}
+          </select>
+          <div className="text-xs text-muted mt-1">
+            {UPCOMING_STAGES[form.current_stage] ?? '—'} ·{' '}
+            {form.current_stage + 1} / {UPCOMING_STAGES.length}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+          Описание
+        </label>
+        <textarea
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          className="mt-2 min-h-[100px]"
+        />
+      </div>
+
+      <div className="surface-soft p-4">
+        <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+          Обложка
+        </label>
+        <div className="mt-2 flex items-center gap-4">
+          {cover ? (
+            <img
+              src={cover}
+              alt=""
+              className="w-24 h-24 rounded object-cover bg-deep"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded bg-deep flex items-center justify-center text-muted">
+              <ImageIcon size={20} />
+            </div>
+          )}
+          <div className="flex-1">
+            <label className="btn text-sm cursor-pointer">
+              <Upload size={14} />
+              {uploading ? 'Загружаем…' : 'Загрузить файл'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) void onPickCover(f)
+                }}
+              />
+            </label>
+            {form.cover_path && (
+              <div className="text-xs text-muted mt-2 font-mono break-all">
+                {form.cover_path}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+          Площадки (ссылки)
+        </label>
+        <div className="grid sm:grid-cols-2 gap-3 mt-2">
+          <input
+            value={form.platforms.spotify}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                platforms: { ...form.platforms, spotify: e.target.value },
+              })
+            }
+            placeholder="Spotify"
+          />
+          <input
+            value={form.platforms.youtube}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                platforms: { ...form.platforms, youtube: e.target.value },
+              })
+            }
+            placeholder="YouTube"
+          />
+          <input
+            value={form.platforms.yandex}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                platforms: { ...form.platforms, yandex: e.target.value },
+              })
+            }
+            placeholder="Яндекс Музыка"
+          />
+          <input
+            value={form.platforms.apple}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                platforms: { ...form.platforms, apple: e.target.value },
+              })
+            }
+            placeholder="Apple Music"
+          />
+        </div>
+      </div>
+
+      <div className="surface-soft p-4">
+        <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+          Участники релиза (credits)
+        </label>
+        <div className="mt-2 text-xs text-muted mb-3">
+          Кликни на таблетку, чтобы добавить или убрать. Выбрано:{' '}
+          {form.creditMemberIds.size}.
+        </div>
+        {members.length === 0 ? (
+          <div className="text-muted text-sm">Загружаем участников…</div>
+        ) : (
+          <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto pr-1">
+            {members.map((m) => {
+              const checked = form.creditMemberIds.has(m.id)
+              const avatar = publicUrl(m.avatar_path)
+              const showAvatar = avatar && !brokenAvatars.has(m.id)
+              return (
+                <button
+                  type="button"
+                  key={m.id}
+                  onClick={() => {
+                    setForm((f) => {
+                      const next = new Set(f.creditMemberIds)
+                      if (checked) next.delete(m.id)
+                      else next.add(m.id)
+                      return { ...f, creditMemberIds: next }
+                    })
+                  }}
+                  className={
+                    'flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-sm transition ' +
+                    (checked
+                      ? 'bg-accent text-bg ring-1 ring-accent'
+                      : 'bg-elevated text-ink hover:bg-deep ring-1 ring-border')
+                  }
+                >
+                  {showAvatar ? (
+                    <img
+                      src={avatar}
+                      alt=""
+                      className="w-6 h-6 rounded-full object-cover"
+                      onError={() => {
+                        setBrokenAvatars((prev) => {
+                          if (prev.has(m.id)) return prev
+                          const next = new Set(prev)
+                          next.add(m.id)
+                          return next
+                        })
+                      }}
+                    />
+                  ) : (
+                    <span
+                      className={
+                        'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium ' +
+                        (checked ? 'bg-bg text-accent' : 'bg-deep text-muted')
+                      }
+                    >
+                      {m.display_name?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  )}
+                  <span className="whitespace-nowrap">{m.display_name}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={form.is_published}
+          onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
+        />
+        Опубликован (виден на публичных страницах)
+      </label>
+
+      <div className="flex gap-2">
+        <button type="submit" className="btn btn-primary" disabled={saving}>
+          <Save size={14} /> {saving ? 'Сохраняем…' : 'Сохранить'}
+        </button>
+        <button type="button" className="btn" onClick={onCancel}>
+          Отмена
+        </button>
+      </div>
+
+      {/* releaseId может пригодиться в будущем (например, для preview) */}
+      {releaseId && <input type="hidden" value={releaseId} />}
+    </form>
+  )
+}
