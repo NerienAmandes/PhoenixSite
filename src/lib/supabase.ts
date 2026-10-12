@@ -36,5 +36,8 @@ export const supabase = createClient(url, anonKey, {
 export function publicUrl(path: string | null | undefined): string | null {
   if (!path) return null
   const { data } = supabase.storage.from('media').getPublicUrl(path)
-  return data.publicUrl
+  // Добавляем timestamp, чтобы сбросить кэш браузера
+  const url = data.publicUrl
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}t=${Date.now()}`
 }
