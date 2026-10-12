@@ -4,7 +4,7 @@ import type { MemberCategory } from '../types'
 import MemberCard from '../components/MemberCard'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { Users, UserX } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, publicUrl } from '../lib/supabase'
 
 type DbMember = {
   id: string
@@ -114,7 +114,7 @@ export default function TeamPage() {
                         tags: m.tags,
                         birthDate: m.birth_mmdd || undefined,
                         bio: m.bio ?? '',
-                        avatar: m.avatar_path ?? '',
+                        avatar: publicUrl(m.avatar_path) ?? '',
                         socials: m.socials || {},
                       }}
                       index={i}
@@ -154,7 +154,7 @@ export default function TeamPage() {
                   tags: m.tags,
                   birthDate: m.birth_mmdd || undefined,
                   bio: m.bio ?? '',
-                  avatar: m.avatar_path ?? '',
+                  avatar: publicUrl(m.avatar_path) ?? '',
                   socials: m.socials || {},
                 }}
                 index={i}

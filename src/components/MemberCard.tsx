@@ -39,12 +39,20 @@ export default function MemberCard({ member, index = 0 }: Props) {
                 alt={member.name}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  const fallback = target.nextElementSibling as HTMLElement
+                  if (fallback) fallback.style.display = 'flex'
+                }}
               />
-            ) : (
-              <div className="w-full h-full bg-fire flex items-center justify-center text-white font-display text-3xl sm:text-4xl">
-                {getInitial(member.name)}
-              </div>
-            )}
+            ) : null}
+            <div
+              className="w-full h-full bg-fire flex items-center justify-center text-white font-display text-3xl sm:text-4xl"
+              style={{ display: member.avatar ? 'none' : 'flex' }}
+            >
+              {getInitial(member.name)}
+            </div>
           </div>
         </div>
         <div className="mt-5">
