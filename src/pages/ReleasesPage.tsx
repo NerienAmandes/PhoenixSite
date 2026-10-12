@@ -1,28 +1,61 @@
-import { useState } from 'react'
-import { portfolio as staticPortfolio } from '../data/portfolio'
-import { upcomingReleases } from '../data/releases'
+import { useState, useEffect } from 'react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
 import { Youtube, Loader2, Sparkles, X } from 'lucide-react'
 import ReleaseCard from '../components/ReleaseCard'
 import InlineYouTubePlayer from '../components/InlineYouTubePlayer'
+import { supabase, publicUrl } from '../lib/supabase'
+import type { Release } from '../types'
 
 type Tab = 'covers' | 'upcoming'
 
 export default function ReleasesPage() {
   useDocumentTitle('Видео')
   const [tab, setTab] = useState<Tab>('covers')
-  const [selectedVideo, setSelectedVideo] = useState<{id: string, title: string, youtubeId: string} | null>(null)
+  const [selectedVideo, setSelectedVideo] = useState<{ id: string, title: string, youtubeId: string } | null>(null)
+
+  // YouTube хук (оставляем как было, если он работает)
   const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
 
-  // Используем YouTube данные, если они есть, иначе статические
+  // Новое состояние для релизов из БД
+  const [dbReleases, setDbReleases] = useState<Release[]>([])
+  const [releasesLoading, setReleasesLoading] = useState(true)
+
+  // Загружаем релизы из Supabase при монтировании
+  useEffect(() => {
+    async function fetchReleases() {
+      const { data, error } = await supabase
+        .from('releases')
+        .select('*')
+        .eq('is_published', true) // Показываем только опубликованные
+        .order('release_date', { ascending: false, nullsFirst: false })
+
+      if (!error && data) {
+        // Маппинг: превращаем snake_case из БД в camelCase, который ждёт ReleaseCard
+        // И самое главное: применяем publicUrl() к обложке!
+        const mapped = data.map((r: any) => ({
+          id: r.slug,
+          title: r.title,
+          originalArtist: r.original_artist || 'Неизвестный исполнитель',
+          cover: publicUrl(r.cover_url) || '',
+          releaseDate: r.release_date || '', // <-- Добавлен fallback на пустую строку
+          status: r.status,
+          platforms: r.platforms || {},
+          currentStage: r.current_stage ?? 0,
+          description: r.description || '', // <-- Добавлено отсутствующее поле
+        }))
+        setDbReleases(mapped)
+      }
+      setReleasesLoading(false)
+    }
+
+    fetchReleases()
+  }, [])
+
+  // Используем YouTube данные, если они есть, иначе заглушка
   const portfolio = ytVideos.length > 0
-    ? ytVideos.map((vid) => ({
-        id: vid.id,
-        title: vid.title,
-        youtubeId: vid.youtubeId,
-      }))
-    : staticPortfolio.map((p) => ({ id: p.id, title: p.title, youtubeId: p.youtubeId }))
+    ? ytVideos.map((vid) => ({ id: vid.id, title: vid.title, youtubeId: vid.youtubeId }))
+    : [] // Если YouTube API не настроен, лучше показать пусто, чем старые статические данные
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'covers', label: 'Каверы' },
@@ -50,11 +83,10 @@ export default function ReleasesPage() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-5 py-2.5 rounded-xl text-sm tracking-wide transition-all ${
-                  active
-                    ? 'bg-fire text-white shadow-glow'
-                    : 'text-muted hover:text-ink'
-                }`}
+                className={`px-5 py-2.5 rounded-xl text-sm tracking-wide transition-all ${active
+                  ? 'bg-fire text-white shadow-glow'
+                  : 'text-muted hover:text-ink'
+                  }`}
               >
                 {t.label}
               </button>
@@ -106,7 +138,9 @@ export default function ReleasesPage() {
               </div>
 
               {portfolio.length === 0 && !ytError && (
-                <div className="mt-12 text-center text-muted">В этой категории пока пусто.</div>
+                <div className="mt-12 text-center text-muted">
+                  Каверы загружаются через YouTube API. Если здесь пусто, проверьте настройки API.
+                </div>
               )}
             </>
           )}
@@ -119,15 +153,25 @@ export default function ReleasesPage() {
             <Sparkles size={18} className="text-accent shrink-0 mt-0.5" />
             <span>
               Здесь будут анонсы грядущих каверов. Названия, даты и платформы
-              обновляются вручную.
+              обновляются через админку.
             </span>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {upcomingReleases.map((r, i) => (
-              <ReleaseCard key={r.id} release={r} index={i} />
-            ))}
-          </div>
+          {releasesLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 size={48} className="animate-spin text-fire" />
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {dbReleases.map((r, i) => (
+                <ReleaseCard key={r.id} release={r} index={i} />
+              ))}
+            </div>
+          )}
+
+          {!releasesLoading && dbReleases.length === 0 && (
+            <div className="mt-12 text-center text-muted">Пока нет анонсированных релизов.</div>
+          )}
         </>
       )}
 
@@ -135,7 +179,7 @@ export default function ReleasesPage() {
       {selectedVideo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm transition-opacity">
           <div className="relative w-full max-w-4xl bg-base rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-full">
-            <button 
+            <button
               onClick={() => setSelectedVideo(null)}
               className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors backdrop-blur-md"
               aria-label="Закрыть"
@@ -155,7 +199,7 @@ export default function ReleasesPage() {
               <h3 className="font-display text-xl sm:text-2xl leading-tight">
                 {selectedVideo.title}
               </h3>
-              <a 
+              <a
                 href={`https://youtube.com/watch?v=${selectedVideo.youtubeId}`}
                 target="_blank"
                 rel="noreferrer"
