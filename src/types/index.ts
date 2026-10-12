@@ -44,16 +44,15 @@ export function getMemberCategories(tags: string[]): MemberCategory[] {
   return Array.from(cats)
 }
 
-export interface Member {
+export type Member = {
   id: string
   name: string
-  role: string
+  role?: string  // добавить ?
   tags: string[]
-  /** Дата рождения в формате «DD.MM» (без года). */
-  birthDate: string
+  birthDate?: string  // добавить ?
   bio: string
-  avatar?: string
-  socials: Social
+  avatar: string
+  socials: Record<string, string>
 }
 
 export interface ReleasePlatforms {

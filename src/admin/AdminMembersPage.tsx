@@ -21,6 +21,7 @@ type DbMember = {
     youtube?: string
   }
   is_published: boolean
+  member_status: 'active' | 'former' | 'hidden' // <-- ДОБАВЛЕНО
 }
 
 type FormState = {
@@ -38,6 +39,7 @@ type FormState = {
     youtube: string
   }
   is_published: boolean
+  member_status: 'active' | 'former' | 'hidden' // <-- ДОБАВЛЕНО
 }
 
 const emptyForm: FormState = {
@@ -50,6 +52,7 @@ const emptyForm: FormState = {
   avatar_path: null,
   socials: { vk: '', telegram: '', instagram: '', youtube: '' },
   is_published: true,
+  member_status: 'active', // <-- ДОБАВЛЕНО
 }
 
 function formFromDb(m: DbMember): FormState {
@@ -68,6 +71,7 @@ function formFromDb(m: DbMember): FormState {
       youtube: m.socials?.youtube ?? '',
     },
     is_published: m.is_published,
+    member_status: m.member_status || 'active', // <-- ДОБАВЛЕНО
   }
 }
 
@@ -184,7 +188,7 @@ export default function AdminMembersPage() {
                 <th className="py-2 pr-3 font-normal">Имя</th>
                 <th className="py-2 pr-3 font-normal">Slug</th>
                 <th className="py-2 pr-3 font-normal">Теги</th>
-                <th className="py-2 pr-3 font-normal">Опубликован</th>
+                <th className="py-2 pr-3 font-normal">Статус</th>
                 <th className="py-2 pr-3 font-normal text-right">Действия</th>
               </tr>
             </thead>
@@ -219,7 +223,9 @@ export default function AdminMembersPage() {
                       {m.tags?.join(', ') || '—'}
                     </td>
                     <td className="py-2 pr-3 text-xs">
-                      {m.is_published ? 'да' : 'нет'}
+                      {m.member_status === 'active' && 'Активный'}
+                      {m.member_status === 'former' && 'Бывший'}
+                      {m.member_status === 'hidden' && 'Скрыт'}
                     </td>
                     <td className="py-2 pr-3 text-right whitespace-nowrap">
                       <button
@@ -348,6 +354,7 @@ function MemberForm({
       avatar_path: form.avatar_path,
       socials,
       is_published: form.is_published,
+      member_status: form.member_status, // <-- ДОБАВЛЕНО
     }
 
     setSaving(true)
@@ -565,7 +572,29 @@ function MemberForm({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
+      {/* НОВЫЙ БЛОК: Статус участника */}
+      <div>
+        <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+          Статус участника
+        </label>
+        <select
+          value={form.member_status}
+          onChange={(e) => setForm({ ...form, member_status: e.target.value as 'active' | 'former' | 'hidden' })}
+          className="mt-2"
+        >
+          <option value="active">Действующий участник</option>
+          <option value="former">Бывший участник</option>
+          <option value="hidden">Скрыт (не показывается нигде)</option>
+        </select>
+        <div className="text-xs text-muted mt-1">
+          {form.member_status === 'active' && 'Показывается в основном составе'}
+          {form.member_status === 'former' && 'Показывается в секции "Бывшие участники"'}
+          {form.member_status === 'hidden' && 'Не показывается на сайте'}
+        </div>
+      </div>
+
+      {/* Старый чекбокс оставляем как есть ниже */}
+      <label className="flex items-center gap-2 text-sm mt-4">
         <input
           type="checkbox"
           checked={form.is_published}
