@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, publicUrl } from '../lib/supabase'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { UPCOMING_STAGES } from '../components/ReleaseCard'
+import {
+  extractVideoId,
+  fetchYouTubeMeta,
+  thumbnailUrl,
+  tryExtractOriginalArtist,
+} from '../lib/youtube'
 import {
   Plus,
   Trash2,
@@ -10,6 +16,8 @@ import {
   X,
   Upload,
   Image as ImageIcon,
+  Wand2,
+  Loader2,
 } from 'lucide-react'
 
 // ---------- типы ----------
@@ -38,6 +46,8 @@ type DbMemberLite = {
   slug: string
   display_name: string
   avatar_path: string | null
+  tags: string[]
+  member_status?: string
 }
 
 type FormState = {
@@ -93,6 +103,49 @@ function formFromDb(r: DbRelease, creditIds: string[]): FormState {
     is_published: r.is_published,
     creditMemberIds: new Set(creditIds),
   }
+}
+
+/**
+ * Скачать YouTube-превью и загрузить в Supabase Storage.
+ *
+ * YouTube на не-maxres видео отдаёт плейсхолдер ~120x90 (~1-4КБ),
+ * поэтому проверяем размер: если меньше 5КБ — это серая заглушка,
+ * пробуем следующее качество.
+ *
+ * Возвращает локальный path (`covers/slug.jpg`) при успехе, иначе null.
+ */
+async function uploadYouTubeCoverToStorage(
+  videoId: string,
+  slug: string,
+): Promise<{ path: string; size: number } | null> {
+  const candidates = [
+    thumbnailUrl(videoId, 'max'),
+    thumbnailUrl(videoId, 'high'),
+  ]
+  const safeSlug = slug.replace(/[^a-z0-9-]/gi, '').toLowerCase() || `yt-${videoId}`
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const blob = await res.blob()
+      // 5KB — отсечка для YouTube-плейсхолдера
+      if (blob.size < 5000) continue
+      const path = `covers/${safeSlug}.jpg`
+      const { error } = await supabase.storage
+        .from('media')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+      if (error) {
+        // Не фейлим весь процесс — обложка останется YouTube-ссылкой
+        console.warn('Storage upload failed:', error.message)
+        continue
+      }
+      return { path, size: blob.size }
+    } catch {
+      // сеть упала или CORS — пробуем следующее качество
+    }
+  }
+  return null
 }
 
 function slugify(s: string): string {
@@ -367,7 +420,8 @@ function ReleaseForm({
     const load = async () => {
       const { data } = await supabase
         .from('members')
-        .select('id, slug, display_name, avatar_path')
+        .select('id, slug, display_name, avatar_path, tags, member_status')
+        .eq('member_status', 'active')
         .order('display_name')
       if (!cancelled) setMembers((data ?? []) as DbMemberLite[])
     }
@@ -382,6 +436,172 @@ function ReleaseForm({
     for (const x of members) m.set(x.id, x)
     return m
   }, [members])
+
+  // ===== YouTube автозаполнение =====
+  // Дебаунс: ждём 700мс после последнего ввода URL,
+  // потом дёргаем oEmbed и подставляем title + обложку.
+  const [youtubeParsing, setYoutubeParsing] = useState(false)
+  const [youtubeCoverSaving, setYoutubeCoverSaving] = useState(false)
+  const [youtubeNote, setYoutubeNote] = useState<string | null>(null)
+  const lastParsedVideoIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const url = form.platforms.youtube.trim()
+    const videoId = extractVideoId(url)
+    if (!videoId) {
+      setYoutubeNote(null)
+      lastParsedVideoIdRef.current = null
+      return
+    }
+    // уже парсили этот ролик — не дёргаем повторно
+    if (lastParsedVideoIdRef.current === videoId) return
+    if (url.length < 10) return
+
+    const timer = window.setTimeout(async () => {
+      setYoutubeParsing(true)
+      setYoutubeNote(null)
+      try {
+        const meta = await fetchYouTubeMeta(url)
+        lastParsedVideoIdRef.current = meta.videoId
+        // Чтобы прелоадер обложки не висел слишком долго,
+        // фиксируем «виртуальный» slug сразу, до окончания парсинга.
+        const optimisticSlug =
+          slugify(meta.title) || `yt-${meta.videoId}`
+        setForm((f) => {
+          const next: FormState = { ...f }
+          // 1) title — только если пустой (не затираем ручной ввод)
+          if (!f.title.trim() && meta.title) {
+            next.title = meta.title
+            if (!f.slug || f.slug === slugify(f.title)) {
+              next.slug = optimisticSlug
+            }
+          }
+          // 2) original_artist — пробуем вытащить из title, если пустой
+          if (!f.original_artist.trim()) {
+            const guessed = tryExtractOriginalArtist(meta.title)
+            if (guessed) next.original_artist = guessed
+          }
+          // 3) обложка: ставим YouTube-превью как мгновенный показ,
+          //    параллельно качаем его в Supabase Storage
+          if (!f.cover_path) {
+            next.cover_path = thumbnailUrl(meta.videoId, 'max')
+            setYoutubeCoverSaving(true)
+            void uploadYouTubeCoverToStorage(meta.videoId, f.slug || optimisticSlug).then(
+              (result) => {
+                setYoutubeCoverSaving(false)
+                if (result) {
+                  setForm((ff) => ({ ...ff, cover_path: result.path }))
+                  setYoutubeNote(
+                    (prev) =>
+                      `${prev ?? "Подтянуто с YouTube"} · обложка сохранена в Storage (${Math.round(result.size / 1024)} КБ)`,
+                  )
+                }
+              },
+            )
+          }
+          return next
+        })
+        setYoutubeNote(
+          `Подтянуто с YouTube: «${meta.title}». Обложку можно заменить кнопкой «Загрузить файл».`,
+        )
+      } catch (e) {
+        setYoutubeNote(
+          e instanceof Error ? e.message : 'Не удалось получить данные с YouTube',
+        )
+      } finally {
+        setYoutubeParsing(false)
+      }
+    }, 700)
+
+    return () => window.clearTimeout(timer)
+  }, [form.platforms.youtube])
+
+  // ===== Копирование credits из других релизов =====
+  const [donors, setDonors] = useState<DbRelease[]>([])
+  const [donorId, setDonorId] = useState<string>('')
+  const [copyBusy, setCopyBusy] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const { data } = await supabase
+        .from('releases')
+        .select('id, slug, title, original_artist, cover_url, release_date, status, platforms, description, current_stage, is_published')
+        .order('release_date', { ascending: false, nullsFirst: false })
+        .limit(50)
+      if (!cancelled) setDonors((data ?? []) as DbRelease[])
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const copyCreditsFrom = async (releaseId: string) => {
+    if (!releaseId) return
+    setCopyBusy(true)
+    setError(null)
+    const { data, error } = await supabase
+      .from('release_credits')
+      .select('member_id')
+      .eq('release_id', releaseId)
+    setCopyBusy(false)
+    if (error) {
+      setError('Не удалось скопировать credits: ' + error.message)
+      return
+    }
+    const ids = new Set<string>((data ?? []).map((r) => r.member_id as string))
+    setForm((f) => ({ ...f, creditMemberIds: ids }))
+  }
+
+  // Пресеты по тегам (быстро добавить всю категорию)
+  const PRESET_TAGS = useMemo(() => {
+    const all = new Set<string>()
+    for (const m of members) for (const t of m.tags) all.add(t)
+    // Фиксируем порядок как в MEMBER_CATEGORIES
+    const order = ['Вокалисты', 'Звукари', 'Художники', 'Видеомонтажёры', 'Переводчики', 'Администрация']
+    const sorted: string[] = []
+    for (const o of order) if (all.has(o)) sorted.push(o)
+    for (const t of all) if (!sorted.includes(t)) sorted.push(t)
+    return sorted
+  }, [members])
+
+  const membersByTag = useMemo(() => {
+    const map = new Map<string, DbMemberLite[]>()
+    for (const m of members) {
+      for (const t of m.tags) {
+        const arr = map.get(t) ?? []
+        arr.push(m)
+        map.set(t, arr)
+      }
+    }
+    return map
+  }, [members])
+
+  const applyPreset = (tag: string, mode: 'add' | 'replace' | 'remove') => {
+    const tagMembers = membersByTag.get(tag) ?? []
+    setForm((f) => {
+      const next = new Set(f.creditMemberIds)
+      for (const m of tagMembers) {
+        if (mode === 'add') next.add(m.id)
+        else if (mode === 'replace') next.add(m.id)
+        else next.delete(m.id)
+      }
+      if (mode === 'replace') {
+        // убираем тех, кто НЕ в этом пресете — по сути «оставить только эту группу»
+        for (const m of members) {
+          if (!tagMembers.includes(m)) next.delete(m.id)
+        }
+      }
+      return { ...f, creditMemberIds: next }
+    })
+  }
+
+  const selectAllMembers = () => {
+    setForm((f) => ({ ...f, creditMemberIds: new Set(members.map((m) => m.id)) }))
+  }
+  const clearAllMembers = () => {
+    setForm((f) => ({ ...f, creditMemberIds: new Set() }))
+  }
 
   const [slugTouched, setSlugTouched] = useState(!isNew)
   useEffect(() => {
@@ -493,7 +713,12 @@ function ReleaseForm({
     onSaved()
   }
 
-  const cover = publicUrl(form.cover_path)
+  const cover = form.cover_path
+    ? form.cover_path.startsWith('http')
+      ? form.cover_path
+      : publicUrl(form.cover_path)
+    : null
+  const coverIsYouTube = !!cover && cover.startsWith('https://img.youtube.com/')
 
   return (
     <form onSubmit={onSave} className="grid gap-4 max-w-3xl">
@@ -666,6 +891,11 @@ function ReleaseForm({
                 {form.cover_path}
               </div>
             )}
+            {coverIsYouTube && (
+              <div className="text-xs text-accent mt-2">
+                Превью подтянуто с YouTube. Нажми «Загрузить файл», чтобы заменить.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -695,6 +925,23 @@ function ReleaseForm({
             }
             placeholder="YouTube"
           />
+          {form.platforms.youtube && (
+            <div className="col-span-2 -mt-1 flex items-center gap-2 text-xs text-muted">
+              {youtubeParsing ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" />
+                  <span>Парсим YouTube…</span>
+                </>
+              ) : youtubeCoverSaving ? (
+                <>
+                  <Loader2 size={12} className="animate-spin" />
+                  <span>Сохраняем обложку в Storage…</span>
+                </>
+              ) : youtubeNote ? (
+                <span className="text-accent">{youtubeNote}</span>
+              ) : null}
+            </div>
+          )}
           <input
             value={form.platforms.yandex}
             onChange={(e) =>
@@ -726,6 +973,99 @@ function ReleaseForm({
           Кликни на таблетку, чтобы добавить или убрать. Выбрано:{' '}
           {form.creditMemberIds.size}.
         </div>
+
+        {/* Панель быстрого заполнения */}
+        <div className="mb-4 p-3 rounded ring-1 ring-border bg-deep/40 space-y-3">
+          <div className="flex items-center gap-2 text-[10px] tracking-[0.25em] uppercase text-muted">
+            <Wand2 size={12} /> Быстрое заполнение
+          </div>
+
+          {/* Копирование из другого релиза */}
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={donorId}
+              onChange={(e) => setDonorId(e.target.value)}
+              className="text-sm py-1 max-w-xs"
+              disabled={copyBusy}
+            >
+              <option value="">— Скопировать из релиза… —</option>
+              {donors.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.title}
+                  {d.original_artist ? ` (${d.original_artist})` : ''}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn text-xs"
+              disabled={!donorId || copyBusy}
+              onClick={() => void copyCreditsFrom(donorId)}
+            >
+              {copyBusy ? 'Копируем…' : 'Вставить'}
+            </button>
+          </div>
+
+          {/* Пресеты по тегам */}
+          {PRESET_TAGS.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {PRESET_TAGS.map((tag) => {
+                const count = (membersByTag.get(tag) ?? []).length
+                return (
+                  <div
+                    key={tag}
+                    className="flex items-center gap-1 rounded-full bg-elevated ring-1 ring-border text-xs"
+                  >
+                    <span className="pl-3 pr-1 py-1 text-ink">{tag} ({count})</span>
+                    <button
+                      type="button"
+                      title={`Только ${tag} (заменит выбор)`}
+                      className="px-2 py-1 hover:bg-accent hover:text-bg rounded-r-full"
+                      onClick={() => applyPreset(tag, 'replace')}
+                    >
+                      только
+                    </button>
+                    <button
+                      type="button"
+                      title={`Добавить всех из «${tag}»`}
+                      className="px-2 py-1 hover:bg-accent hover:text-bg border-l border-border"
+                      onClick={() => applyPreset(tag, 'add')}
+                    >
+                      +добавить
+                    </button>
+                    <button
+                      type="button"
+                      title={`Убрать всех из «${tag}»`}
+                      className="px-2 py-1 hover:bg-accent hover:text-bg border-l border-border rounded-r-full"
+                      onClick={() => applyPreset(tag, 'remove')}
+                    >
+                      −убрать
+                    </button>
+                  </div>
+                )
+              })}
+              <div className="ml-auto flex gap-1">
+                <button
+                  type="button"
+                  className="btn text-xs"
+                  onClick={selectAllMembers}
+                  disabled={form.creditMemberIds.size === members.length}
+                >
+                  Все
+                </button>
+                <button
+                  type="button"
+                  className="btn text-xs"
+                  onClick={clearAllMembers}
+                  disabled={form.creditMemberIds.size === 0}
+                >
+                  Снять
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {members.length === 0 ? (
           <div className="text-muted text-sm">Загружаем участников…</div>
         ) : (
