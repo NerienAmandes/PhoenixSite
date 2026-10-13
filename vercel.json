@@ -4,7 +4,8 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/ping-supabase", "schedule": "0 3 * * *" }
+    { "path": "/api/ping-supabase", "schedule": "0 3 * * *" },
+    { "path": "/api/youtube-import", "schedule": "0 9 * * *" }
   ],
   "headers": [
     {
