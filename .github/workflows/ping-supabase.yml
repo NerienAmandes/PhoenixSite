@@ -1,0 +1,23 @@
+name: Ping Supabase
+
+# Каждый день в 09:00 UTC (сдвинуто относительно Vercel cron в 03:00 UTC,
+# чтобы нагрузка не совпадала). Дополнительная страховка: даже если Vercel
+# cron отвалится, GH Actions всё равно пингует БД напрямую через REST.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping Supabase REST
+        run: |
+          URL="${{ secrets.SUPABASE_URL }}/rest/v1/releases?select=id&limit=1"
+          curl -fsS -o /dev/null -w "HTTP %{http_code}\n" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "$URL"

@@ -1,22 +1,18 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, Play, Flame, Eye } from 'lucide-react'
-import { releases } from '../data/releases'
 import { services } from '../data/services'
 import ReleaseCard from '../components/ReleaseCard'
 import ServiceCard from '../components/ServiceCard'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useYouTubeStats } from '../hooks/useYouTubeStats'
+import { useReleases } from '../hooks/useReleases'
 import { formatNumber, formatAge, formatDate } from '../utils/formatters'
 
 export default function HomePage() {
   useDocumentTitle('Главная')
-  // Показываем все предстоящие релизы (до 6 штук), чтобы Zombie Stage тоже был виден
-  const upcoming = releases.filter((r) => r.status === 'upcoming').slice(0, 6)
-  // Плейлист выпущенных релизов: только те, у которых есть YouTube-ссылка.
-  // Добавил новое видео в data/releases.ts — карточка автоматически появится на главной.
-  const released = releases
-    .filter((r) => r.status === 'released' && r.platforms.youtube)
-    .sort((a, b) => +new Date(b.releaseDate) - +new Date(a.releaseDate))
+  // Релизы подтягиваются из Supabase (как и на странице «Релизы»).
+  // До загрузки массивы пустые — секции покажут плейсхолдеры.
+  const { upcoming, released, loading: releasesLoading } = useReleases()
   const { data: ytStats, ageSeconds } = useYouTubeStats()
   // Пока API не ответило, держим цифру из ТЗ как фоллбэк, чтобы не дёргать вёрстку
   const views = ytStats?.views ?? 352212
@@ -53,7 +49,7 @@ export default function HomePage() {
               </p>
               <div className="reveal reveal-4 mt-9 flex flex-wrap gap-3">
                 <a
-                  href={releases.find((r) => r.status === 'released')?.platforms.youtube ?? '#'}
+                  href={released[0]?.platforms.youtube ?? '#'}
                   target="_blank"
                   rel="noreferrer"
                   className="btn btn-primary"
@@ -138,7 +134,9 @@ export default function HomePage() {
               Наши <span className="text-fire">релизы</span>
             </h2>
             <div className="mt-2 text-sm text-muted">
-              {released.length} {released.length === 1 ? 'видео' : 'видео'} в плейлисте
+              {releasesLoading
+                ? 'Загружаем плейлист…'
+                : `${released.length} ${released.length === 1 ? 'видео' : 'видео'} в плейлисте`}
             </div>
           </div>
           <Link to="/releases" className="btn btn-ghost">

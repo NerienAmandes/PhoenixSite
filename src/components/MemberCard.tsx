@@ -56,7 +56,7 @@ export default function MemberCard({ member, index = 0 }: Props) {
           </div>
         </div>
         <div className="mt-5">
-          <div className="text-[10px] tracking-[0.3em] uppercase text-accent mb-1">
+          <div className="text-xs sm:text-sm tracking-[0.15em] uppercase text-accent font-medium mb-1.5">
             {member.role}
           </div>
           <h3 className="font-display text-2xl leading-tight">{member.name}</h3>
@@ -80,8 +80,8 @@ export default function MemberCard({ member, index = 0 }: Props) {
           )}
 
           {member.birthDate && (
-            <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted">
-              <Calendar size={12} />
+            <div className="mt-3 inline-flex items-center gap-1.5 text-sm text-ink-2">
+              <Calendar size={14} />
               <span>{member.birthDate}</span>
             </div>
           )}

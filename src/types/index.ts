@@ -14,12 +14,12 @@ export type MemberCategory =
   | 'admin'
 
 export const MEMBER_CATEGORIES: { id: MemberCategory; label: string }[] = [
+  { id: 'admin', label: 'Администрация' },
   { id: 'vocals', label: 'Вокалисты' },
   { id: 'sound', label: 'Звукари' },
   { id: 'art', label: 'Художники' },
   { id: 'video', label: 'Видеомонтажёры' },
   { id: 'translators', label: 'Переводчики' },
-  { id: 'admin', label: 'Администрация' },
 ]
 
 /**

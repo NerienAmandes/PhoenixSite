@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
+import { useReleases } from '../hooks/useReleases'
 import { Youtube, Loader2, Sparkles, X, Disc3 } from 'lucide-react'
 import ReleaseCard from '../components/ReleaseCard'
 import InlineYouTubePlayer from '../components/InlineYouTubePlayer'
-import { supabase, publicUrl } from '../lib/supabase'
-import type { Release } from '../types'
 
 type Tab = 'covers' | 'upcoming' | 'released'
 
@@ -19,39 +18,7 @@ export default function ReleasesPage() {
   } | null>(null)
 
   const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
-
-  const [dbReleases, setDbReleases] = useState<Release[]>([])
-  const [releasesLoading, setReleasesLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchReleases() {
-      const { data, error } = await supabase
-        .from('releases')
-        .select('*')
-        .eq('is_published', true)
-        .order('release_date', { ascending: false, nullsFirst: true })
-
-      if (!error && data) {
-        const mapped = data.map((r: any) => ({
-          id: r.slug,
-          title: r.title,
-          originalArtist: r.original_artist || 'Неизвестный исполнитель',
-          cover: r.cover_url?.startsWith('http')
-            ? r.cover_url
-            : publicUrl(r.cover_url) || '',
-          releaseDate: r.release_date || '',
-          status: r.status,
-          platforms: r.platforms || {},
-          currentStage: r.current_stage ?? 0,
-          description: r.description || '',
-        }))
-        setDbReleases(mapped)
-      }
-      setReleasesLoading(false)
-    }
-
-    fetchReleases()
-  }, [])
+  const { releases: dbReleases, loading: releasesLoading } = useReleases()
 
   const portfolio =
     ytVideos.length > 0

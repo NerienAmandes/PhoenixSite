@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { MEMBER_CATEGORIES, getMemberCategories } from '../types'
 import type { MemberCategory } from '../types'
 import MemberCard from '../components/MemberCard'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { Users, UserX } from 'lucide-react'
+import { Users, UserX, ArrowUpRight } from 'lucide-react'
 import { supabase, publicUrl } from '../lib/supabase'
 
 type DbMember = {
@@ -27,11 +28,11 @@ export default function TeamPage() {
 
   useEffect(() => {
     async function fetchMembers() {
-      // Загружаем активных и бывших (hidden не показываем)
+      // Загружаем только активных. Бывшие — на отдельной странице /team/former.
       const { data, error } = await supabase
         .from('members')
         .select('*')
-        .in('member_status', ['active', 'former'])
+        .eq('member_status', 'active')
         .order('display_name', { ascending: true })
 
       if (error) {
@@ -54,11 +55,8 @@ export default function TeamPage() {
     )
   }
 
-  // Разделяем на активных и бывших
-  const activeMembers = members.filter(m => m.member_status === 'active')
-  const formerMembers = members.filter(m => m.member_status === 'former')
-
   // Группировка активных по категориям
+  const activeMembers = members.filter(m => m.member_status === 'active')
   const grouped: Record<MemberCategory, DbMember[]> = {
     vocals: [],
     sound: [],
@@ -131,38 +129,24 @@ export default function TeamPage() {
         })}
       </div>
 
-      {/* Бывшие участники */}
-      {formerMembers.length > 0 && (
-        <section className="mt-20 pt-12 border-t border-border/30">
-          <div className="reveal">
-            <span className="tag"><UserX size={12} /> Бывшие участники</span>
-          </div>
-          <h2 className="reveal mt-7 font-display text-3xl sm:text-4xl leading-[1.35]">
-            Те, кто был с нами
-          </h2>
-          <p className="reveal mt-4 max-w-2xl text-lg text-muted">
-            Мы благодарны каждому, кто внёс свой вклад в историю FirePhoenix.
-          </p>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {formerMembers.map((m, i) => (
-              <MemberCard
-                key={`former-${m.id}`}
-                member={{
-                  id: m.slug,
-                  name: m.display_name,
-                  role: m.role || undefined,
-                  tags: m.tags,
-                  birthDate: m.birth_mmdd || undefined,
-                  bio: m.bio ?? '',
-                  avatar: publicUrl(m.avatar_path) ?? '',
-                  socials: m.socials || {},
-                }}
-                index={i}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Ссылка на страницу бывших участников */}
+      <section className="mt-20 pt-12 border-t border-border/30">
+        <div className="reveal">
+          <span className="tag">
+            <UserX size={12} /> Бывшие участники
+          </span>
+        </div>
+        <h2 className="reveal mt-7 font-display text-3xl sm:text-4xl leading-[1.35]">
+          Те, кто был с нами
+        </h2>
+        <p className="reveal mt-4 max-w-2xl text-lg text-muted">
+          Мы благодарны каждому, кто внёс свой вклад в историю FirePhoenix.
+          У них теперь есть своё место на сайте.
+        </p>
+        <Link to="/team/former" className="btn btn-ghost mt-6">
+          Открыть страницу бывших <ArrowUpRight size={14} />
+        </Link>
+      </section>
     </div>
   )
 }
