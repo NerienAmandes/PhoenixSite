@@ -1,4 +1,5 @@
 import type { DbMember } from '../hooks/useMembers'
+import { publicUrl } from '../lib/supabase' // <-- 1. ДОБАВИЛИ ИМПОРТ
 
 export interface Social {
   vk?: string
@@ -26,7 +27,6 @@ export const MEMBER_CATEGORIES: { id: MemberCategory; label: string }[] = [
 
 /**
  * Маппинг тегов участника в категории для сортировки на странице «Состав».
- * Используется в `getMemberCategories` ниже.
  */
 const TAG_TO_CATEGORY: Record<string, MemberCategory> = {
   'вокалист': 'vocals',
@@ -34,6 +34,7 @@ const TAG_TO_CATEGORY: Record<string, MemberCategory> = {
   'звукарь': 'sound',
   'художник': 'art',
   'монтажер': 'video',
+  'монтажёр': 'video', // <-- 2. ДОБАВИЛИ ВАРИАНТ С БУКВОЙ Ё (частая причина "пропажи" из категории)
   'переводчик': 'translators',
 }
 
@@ -49,9 +50,9 @@ export function getMemberCategories(tags: string[]): MemberCategory[] {
 export type Member = {
   id: string
   name: string
-  role?: string  // добавить ?
+  role?: string
   tags: string[]
-  birthDate?: string  // добавить ?
+  birthDate?: string
   bio: string
   avatar: string
   socials: Record<string, string>
@@ -66,7 +67,7 @@ export function toUiMember(m: DbMember): Member {
     tags: m.tags ?? [],
     birthDate: m.birth_mmdd || undefined,
     bio: m.bio ?? '',
-    avatar: m.avatar_path ?? '',
+    avatar: publicUrl(m.avatar_path) || '', // <-- 3. ИСПРАВИЛИ: теперь путь превращается в полную ссылку + сброс кэша
     socials: m.socials ?? {},
   }
 }
@@ -88,53 +89,32 @@ export interface Release {
   platforms: ReleasePlatforms
   description: string
   currentStage?: number
-  /** Язык оригинала (например, "Korean", "English", "Japanese"). */
   originalLanguage?: string
-  /** ID участников, которые поработали над релизом (вокалисты, звукари, художники и т.д.).
-   *  Хранятся slug'и (а не UUID) — это совпадает с тем, как `id` используется
-   *  на клиенте и совместимо с фильтрами на /releases. */
   credits?: string[]
 }
 
 // ---------- Примеры адаптаций текстов ----------
 
-/** Одна строка / строфа в параллельном сравнении оригинала и адаптации. */
 export interface AdaptationLine {
-  /** Оригинальная строка (на языке оригинала) */
   original: string
-  /** Строка на русском в нашей адаптации */
   adapted: string
-  /**
-   * Короткая пометка «что тут сделали» (опционально).
-   * Например: «сохранили ритм», «сменили рифму», «добавили образ».
-   * Если null — просто параллельная строка без акцента.
-   */
   note?: string | null
-  /** Тип акцента для визуала (опционально). null/undefined = обычная строка. */
   highlight?: 'rhyme' | 'rhythm' | 'meaning' | 'image' | null
 }
 
 export interface AdaptationVerse {
-  /** Подзаголовок фрагмента: «Куплет 1», «Припев», «Бридж» и т.п. */
   label: string
   lines: AdaptationLine[]
 }
 
 export interface AdaptationExample {
   id: string
-  /** Русское название нашего кавера */
   title: string
-  /** Оригинальный исполнитель и трек */
   originalArtist: string
-  /** Язык оригинала (для подписи колонки) */
   originalLang: string
-  /** Год оригинального трека (опционально) */
   year?: number
-  /** Короткий анонс: о чём фрагмент и что в нём интересного */
   teaser: string
-  /** Несколько параллельных фрагментов */
   verses: AdaptationVerse[]
-  /** Опционально: ссылка на готовый релиз */
   releaseId?: string
 }
 
@@ -162,8 +142,6 @@ export interface CoverStageMeta {
   id: CoverStageId
   title: string
   description: string
-  /** Базовая цена этапа в рублях. Сумма выбранных этапов = стоимость заказа.
-   *  Итог корректируется в зависимости от сложности трека. */
   basePrice: number
 }
 
@@ -223,8 +201,6 @@ export interface Vacancy {
 }
 
 // ---------- Пользователи и заявки ----------
-// User больше не используется: авторизация зрителей убрана, осталась
-// только админка, у которой свой Supabase User (@supabase/supabase-js).
 
 export type SubmissionType = 'service' | 'join' | 'cover'
 
