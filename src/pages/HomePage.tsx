@@ -88,9 +88,9 @@ export default function HomePage() {
               </div>
               <div className="reveal reveal-6 mt-12 grid grid-cols-3 gap-6 max-w-md">
                 <div>
-                  <div className="font-display text-3xl text-fire">~7</div>
+                  <div className="font-display text-3xl text-fire">30.12.2019</div>
                   <div className="text-[10px] tracking-[0.3em] uppercase text-muted min-h-[1.5em]">
-                    лет каверов
+                   день рождения команды
                   </div>
                 </div>
                 <div>
