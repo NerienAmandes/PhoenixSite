@@ -16,6 +16,7 @@ import AdminLayout from './admin/AdminLayout'
 import AdminLoginPage from './admin/AdminLoginPage'
 import AdminMembersPage from './admin/AdminMembersPage'
 import AdminReleasesPage from './admin/AdminReleasesPage'
+import AdminContentPage from './admin/AdminContentPage'
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
             <Route index element={<Navigate to="members" replace />} />
             <Route path="members" element={<AdminMembersPage />} />
             <Route path="releases" element={<AdminReleasesPage />} />
+            <Route path="content" element={<AdminContentPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

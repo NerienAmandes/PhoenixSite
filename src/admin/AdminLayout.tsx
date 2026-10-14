@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { useAdminAuth } from './store/useAdminAuth'
-import { LogOut, ShieldCheck, Users, Disc3, Home } from 'lucide-react'
+import { LogOut, ShieldCheck, Users, Disc3, Home, FileText } from 'lucide-react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 /**
@@ -67,9 +67,10 @@ export default function AdminLayout() {
           </button>
         </div>
       </header>
-      <nav className="flex gap-2 p-3 border-b border-border">
+      <nav className="flex flex-wrap gap-2 p-3 border-b border-border">
         <AdminTab to="/admin/members" icon={<Users size={14} />} label="Участники" />
         <AdminTab to="/admin/releases" icon={<Disc3 size={14} />} label="Релизы" />
+        <AdminTab to="/admin/content" icon={<FileText size={14} />} label="Контент" />
       </nav>
       <div className="p-5">
         <Outlet />
