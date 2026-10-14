@@ -29,7 +29,18 @@ export function useYouTubePlaylist() {
           return
         }
 
-        const data = await res.json()
+        // ✅ ИСПРАВЛЕНО: защита от битого JSON
+        let data
+        try {
+          data = await res.json()
+        } catch (jsonErr) {
+          console.error('API вернул невалидный JSON:', jsonErr)
+          const text = await res.text().catch(() => '(не удалось прочитать ответ)')
+          console.error('Содержимое ответа:', text.slice(0, 200))
+          setError('API вернул некорректный ответ. Проверьте настройки YouTube API.')
+          setVideos([])
+          return
+        }
 
         if (!data.items || data.items.length === 0) {
           console.warn('Плейлист пуст')

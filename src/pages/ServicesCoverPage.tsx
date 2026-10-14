@@ -10,6 +10,7 @@ import { useMeta } from '../hooks/useMeta'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
 import { getSocial } from '../config/team'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
+import { useCoverStages, type CoverStageId } from '../hooks/useCoverStages'
 import {
   Check,
   ArrowUpRight,
@@ -27,7 +28,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { isValidEmail, isValidName } from '../utils/validators'
-import { COVER_STAGES, type CoverStageId } from '../types'
 import InlineYouTubePlayer from '../components/InlineYouTubePlayer'
 
 const STAGE_ICONS: Record<CoverStageId, LucideIcon> = {
@@ -47,15 +47,23 @@ export default function ServicesCoverPage() {
     description:
       'Заказать кавер на русском под ключ: от адаптации текста до готового видео. Свой набор этапов под бюджет.',
   })
+
   const addSubmission = useSubmissionsStore((s) => s.add)
   const { videos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
-  const [selectedVideo, setSelectedVideo] = useState<{id: string, title: string, youtubeId: string} | null>(null)
+  const { stages, loading: stagesLoading } = useCoverStages()
 
-  // Берём только каверы (не shorts и не live) — те, что уже выложены на канал.
+  const [selectedVideo, setSelectedVideo] = useState<{
+    id: string
+    title: string
+    youtubeId: string
+  } | null>(null)
+
   const examples = useMemo(() => videos.slice(0, 6), [videos])
 
   // Состояние формы
-  const [coverStages, setCoverStages] = useState<CoverStageId[]>(COVER_DEFAULT_STAGES)
+  const [coverStages, setCoverStages] = useState<CoverStageId[]>(
+    COVER_DEFAULT_STAGES
+  )
   const [coverComment, setCoverComment] = useState('')
   const [coverName, setCoverName] = useState('')
   const [coverContact, setCoverContact] = useState('')
@@ -66,12 +74,12 @@ export default function ServicesCoverPage() {
   const [coverLoading, setCoverLoading] = useState(false)
   const [coverApiError, setCoverApiError] = useState<string | null>(null)
 
-  // Автоподсчёт стоимости
+  // Автоподсчёт стоимости — теперь берём цены из stages
   const coverCalc = useMemo(() => {
-    const raw = coverStages.reduce(
-      (sum, id) => sum + (COVER_STAGES.find((s) => s.id === id)?.basePrice ?? 0),
-      0
-    )
+    const raw = coverStages.reduce((sum, id) => {
+      const stage = stages.find((s) => s.id === id)
+      return sum + (stage?.basePrice ?? 0)
+    }, 0)
     const total = Math.max(COVER_MIN_PRICE, raw)
     return {
       raw,
@@ -79,7 +87,7 @@ export default function ServicesCoverPage() {
       clamped: raw < COVER_MIN_PRICE,
       exceedsMax: raw > COVER_MAX_PRICE,
     }
-  }, [coverStages])
+  }, [coverStages, stages])
 
   const toggleStage = (id: CoverStageId) => {
     setCoverStages((prev) =>
@@ -100,7 +108,7 @@ export default function ServicesCoverPage() {
         let detail = ''
         try {
           const data = await res.json()
-          detail = data?.error ? ` — ${data.error}` : ''
+          detail = data?.error ? `— ${data.error}` : ''
         } catch {
           /* ignore */
         }
@@ -121,14 +129,17 @@ export default function ServicesCoverPage() {
     setCoverSuccess(false)
     const next: Record<string, string> = {}
     if (!isValidName(coverName)) next.name = 'Укажите имя'
-    if (!isValidEmail(coverContact)) next.contact = 'Похоже, e-mail некорректен'
-    if (coverTrack.trim().length < 3) next.track = 'Добавьте ссылку на оригинальный трек'
-    if (coverStages.length === 0) next.stages = 'Выберите хотя бы один этап'
+    if (!isValidEmail(coverContact))
+      next.contact = 'Похоже, e-mail некорректен'
+    if (coverTrack.trim().length < 3)
+      next.track = 'Добавьте ссылку на оригинальный трек'
+    if (coverStages.length === 0)
+      next.stages = 'Выберите хотя бы один этап'
     setCoverErrors(next)
     if (Object.keys(next).length > 0) return
 
     const stageList = coverStages
-      .map((id) => COVER_STAGES.find((s) => s.id === id)?.title)
+      .map((id) => stages.find((s) => s.id === id)?.title)
       .filter(Boolean)
       .join(' → ')
 
@@ -157,7 +168,6 @@ export default function ServicesCoverPage() {
       setCoverLoading(false)
       return
     }
-
     try {
       addSubmission({
         userId: '',
@@ -174,7 +184,6 @@ export default function ServicesCoverPage() {
     } catch (err) {
       console.warn('addSubmission failed (не критично):', err)
     }
-
     setCoverSuccess(true)
     setCoverLoading(false)
     setCoverName('')
@@ -213,68 +222,94 @@ export default function ServicesCoverPage() {
             </h2>
           </div>
           <div className="flex items-center gap-2 text-base text-muted">
-            <Mic2 size={16} /> От {COVER_MIN_PRICE.toLocaleString('ru-RU')} до {COVER_MAX_PRICE.toLocaleString('ru-RU')} ₽
+            <Mic2 size={16} /> От{' '}
+            {COVER_MIN_PRICE.toLocaleString('ru-RU')} до{' '}
+            {COVER_MAX_PRICE.toLocaleString('ru-RU')} ₽
           </div>
         </div>
 
-        <div className="surface overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-border text-sm tracking-[0.3em] uppercase text-muted">
-            <div className="col-span-12 sm:col-span-3">Этап</div>
-            <div className="hidden sm:block sm:col-span-7">Что входит</div>
-            <div className="col-span-12 sm:col-span-2 sm:text-right">Цена</div>
+        {stagesLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={48} className="animate-spin text-fire" />
           </div>
-          {COVER_STAGES.map((stage, i) => {
-            const Icon = STAGE_ICONS[stage.id]
-            return (
-              <div
-                key={stage.id}
-                className={`grid grid-cols-12 gap-4 px-6 py-5 items-start reveal ${
-                  i !== COVER_STAGES.length - 1 ? 'border-b border-border' : ''
-                }`}
-                style={{ animationDelay: `${i * 0.04}s` }}
-              >
-                <div className="col-span-12 sm:col-span-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-fireSoft flex items-center justify-center text-accent shrink-0">
-                      <Icon size={16} />
-                    </div>
-                    <div>
-                      <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
-                        Этап {String(i + 1).padStart(2, '0')}
-                      </div>
-                      <div className="font-display text-xl leading-tight mt-0.5">{stage.title}</div>
-                    </div>
-                  </div>
+        ) : (
+          <>
+            <div className="surface overflow-hidden">
+              <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-border text-sm tracking-[0.3em] uppercase text-muted">
+                <div className="col-span-12 sm:col-span-3">Этап</div>
+                <div className="hidden sm:block sm:col-span-7">
+                  Что входит
                 </div>
-                <div className="hidden sm:block sm:col-span-7 text-base text-muted leading-relaxed">
-                  {stage.description}
-                </div>
-                <div className="col-span-12 sm:col-span-2 sm:text-right font-display text-2xl text-fire">
-                  {stage.basePrice.toLocaleString('ru-RU')} ₽
+                <div className="col-span-12 sm:col-span-2 sm:text-right">
+                  Цена
                 </div>
               </div>
-            )
-          })}
-        </div>
-
-        <div className="reveal reveal-3 mt-6 grid gap-3 sm:grid-cols-2">
-          <div className="surface-soft p-5 flex items-start gap-3 text-base text-muted">
-            <AlertCircle size={18} className="text-accent shrink-0 mt-0.5" />
-            <span>
-              Минимум <span className="text-fire font-medium">{COVER_MIN_PRICE.toLocaleString('ru-RU')} ₽</span> —
-              даже на «голом» голосе работают вокалист, переводчик и тюнер.
-            </span>
-          </div>
-          <div className="surface-soft p-5 flex items-start gap-3 text-base text-muted">
-            <AlertCircle size={18} className="text-accent shrink-0 mt-0.5" />
-            <span>
-              Итог корректируется от сложности трека. Если трек окажется
-              слишком тяжёлым — обсудим отдельно, возможен отказ.
-            </span>
-          </div>
-        </div>
+              {stages.map((stage, i) => {
+                const Icon = STAGE_ICONS[stage.id]
+                return (
+                  <div
+                    key={stage.id}
+                    className={`grid grid-cols-12 gap-4 px-6 py-5 items-start reveal ${
+                      i !== stages.length - 1 ? 'border-b border-border' : ''
+                    }`}
+                    style={{ animationDelay: `${i * 0.04}s` }}
+                  >
+                    <div className="col-span-12 sm:col-span-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-fireSoft flex items-center justify-center text-accent shrink-0">
+                          <Icon size={16} />
+                        </div>
+                        <div>
+                          <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
+                            Этап {String(i + 1).padStart(2, '0')}
+                          </div>
+                          <div className="font-display text-xl leading-tight mt-0.5">
+                            {stage.title}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="hidden sm:block sm:col-span-7 text-base text-muted leading-relaxed">
+                      {stage.description}
+                    </div>
+                    <div className="col-span-12 sm:col-span-2 sm:text-right font-display text-2xl text-fire">
+                      {stage.basePrice.toLocaleString('ru-RU')} ₽
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="reveal reveal-3 mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="surface-soft p-5 flex items-start gap-3 text-base text-muted">
+                <AlertCircle
+                  size={18}
+                  className="text-accent shrink-0 mt-0.5"
+                />
+                <span>
+                  Минимум{' '}
+                  <span className="text-fire font-medium">
+                    {COVER_MIN_PRICE.toLocaleString('ru-RU')} ₽
+                  </span>{' '}
+                  — даже на «голом» голосе работают вокалист, переводчик и
+                  тюнер.
+                </span>
+              </div>
+              <div className="surface-soft p-5 flex items-start gap-3 text-base text-muted">
+                <AlertCircle
+                  size={18}
+                  className="text-accent shrink-0 mt-0.5"
+                />
+                <span>
+                  Итог корректируется от сложности трека. Если трек окажется
+                  слишком тяжёлым — обсудим отдельно, возможен отказ.
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </section>
 
+      {/* Секция "Сроки" — пока оставляем хардкод, перенесём позже */}
       <section className="mt-20">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
@@ -286,7 +321,6 @@ export default function ServicesCoverPage() {
             </h2>
           </div>
         </div>
-
         <div className="surface relative overflow-hidden p-7 sm:p-9">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-fire opacity-10 blur-3xl" />
           <div className="relative grid gap-6 lg:grid-cols-12 items-center">
@@ -306,11 +340,36 @@ export default function ServicesCoverPage() {
             </div>
             <div className="lg:col-span-7 grid gap-3 sm:grid-cols-2">
               {[
-                { id: 'lyrics', icon: STAGE_ICONS.lyrics, title: 'Текст', period: 'от 3 дней до 1 недели' },
-                { id: 'vocal', icon: STAGE_ICONS.vocal, title: 'Вокал', period: 'до 2 недель' },
-                { id: 'back-vocal', icon: STAGE_ICONS['back-vocal'], title: 'Бэк-вокал', period: 'до 2 недель' },
-                { id: 'art', icon: STAGE_ICONS.art, title: 'Арт', period: 'до 2 недель' },
-                { id: 'video', icon: STAGE_ICONS.video, title: 'Видео', period: 'до 2 недель' },
+                {
+                  id: 'lyrics' as CoverStageId,
+                  icon: STAGE_ICONS.lyrics,
+                  title: 'Текст',
+                  period: 'от 3 дней до 1 недели',
+                },
+                {
+                  id: 'vocal' as CoverStageId,
+                  icon: STAGE_ICONS.vocal,
+                  title: 'Вокал',
+                  period: 'до 2 недель',
+                },
+                {
+                  id: 'back-vocal' as CoverStageId,
+                  icon: STAGE_ICONS['back-vocal'],
+                  title: 'Бэк-вокал',
+                  period: 'до 2 недель',
+                },
+                {
+                  id: 'art' as CoverStageId,
+                  icon: STAGE_ICONS.art,
+                  title: 'Арт',
+                  period: 'до 2 недель',
+                },
+                {
+                  id: 'video' as CoverStageId,
+                  icon: STAGE_ICONS.video,
+                  title: 'Видео',
+                  period: 'до 2 недель',
+                },
               ].map((item) => {
                 const Icon = item.icon
                 return (
@@ -345,6 +404,7 @@ export default function ServicesCoverPage() {
         </div>
       </section>
 
+      {/* Примеры — YouTube */}
       <section className="mt-20">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
@@ -359,13 +419,11 @@ export default function ServicesCoverPage() {
             Все релизы <ArrowUpRight size={14} />
           </Link>
         </div>
-
         {ytLoading && (
           <div className="flex items-center justify-center py-12">
             <Loader2 size={40} className="animate-spin text-fire" />
           </div>
         )}
-
         {ytError && (
           <div className="surface-soft p-5 text-base text-muted">
             Не удалось подгрузить плейлист — показываем заглушку. Откройте{' '}
@@ -380,13 +438,11 @@ export default function ServicesCoverPage() {
             и оцените работы там.
           </div>
         )}
-
         {!ytLoading && !ytError && examples.length === 0 && (
           <div className="surface-soft p-6 text-center text-muted">
             В плейлисте пока нет видео. Скоро появятся первые каверы.
           </div>
         )}
-
         {!ytLoading && examples.length > 0 && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {examples.map((v, i) => (
@@ -415,11 +471,10 @@ export default function ServicesCoverPage() {
         )}
       </section>
 
-      {/* Модальное окно с плеером */}
       {selectedVideo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm transition-opacity">
           <div className="relative w-full max-w-4xl bg-base rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col max-h-full">
-            <button 
+            <button
               onClick={() => setSelectedVideo(null)}
               className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors backdrop-blur-md"
               aria-label="Закрыть"
@@ -439,7 +494,7 @@ export default function ServicesCoverPage() {
               <h3 className="font-display text-xl sm:text-2xl leading-tight">
                 {selectedVideo.title}
               </h3>
-              <a 
+              <a
                 href={`https://youtube.com/watch?v=${selectedVideo.youtubeId}`}
                 target="_blank"
                 rel="noreferrer"
@@ -452,6 +507,7 @@ export default function ServicesCoverPage() {
         </div>
       )}
 
+      {/* Форма заказа */}
       <div className="mt-20 grid gap-8 lg:grid-cols-12 items-start">
         <div className="lg:col-span-5">
           <h2 className="font-display text-4xl sm:text-5xl">Заказать кавер</h2>
@@ -476,7 +532,10 @@ export default function ServicesCoverPage() {
               <div className="font-medium">Нужен только текст?</div>
               <div className="text-muted">
                 Если вам нужна только лирика — закажите{' '}
-                <Link to="/services/lyrics" className="text-accent hover:underline">
+                <Link
+                  to="/services/lyrics"
+                  className="text-accent hover:underline"
+                >
                   адаптацию текста
                 </Link>{' '}
                 на отдельной странице.
@@ -484,7 +543,6 @@ export default function ServicesCoverPage() {
             </div>
           </div>
         </div>
-
         <form
           onSubmit={handleCoverSubmit}
           className="lg:col-span-7 surface p-7 sm:p-9 sticky top-24"
@@ -496,11 +554,12 @@ export default function ServicesCoverPage() {
               </div>
               <div>
                 <div className="font-medium">Заказ принят!</div>
-                <div className="text-muted">Мы свяжемся с вами в ближайшее время и обсудим детали.</div>
+                <div className="text-muted">
+                  Мы свяжемся с вами в ближайшее время и обсудим детали.
+                </div>
               </div>
             </div>
           )}
-
           {coverApiError && (
             <div className="mb-6 surface-soft p-4 text-base flex items-start gap-3 border border-red-300/40">
               <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 shrink-0">
@@ -512,103 +571,139 @@ export default function ServicesCoverPage() {
               </div>
             </div>
           )}
-
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="text-sm tracking-[0.3em] uppercase text-muted">Имя</label>
+              <label className="text-sm tracking-[0.3em] uppercase text-muted">
+                Имя
+              </label>
               <input
                 value={coverName}
                 onChange={(e) => setCoverName(e.target.value)}
                 placeholder="Иван Петров"
                 className="mt-2 text-base"
               />
-              {coverErrors.name && <p className="mt-1.5 text-sm text-accent">{coverErrors.name}</p>}
+              {coverErrors.name && (
+                <p className="mt-1.5 text-sm text-accent">
+                  {coverErrors.name}
+                </p>
+              )}
             </div>
             <div>
-              <label className="text-sm tracking-[0.3em] uppercase text-muted">E-mail или Telegram</label>
+              <label className="text-sm tracking-[0.3em] uppercase text-muted">
+                E-mail или Telegram
+              </label>
               <input
                 value={coverContact}
                 onChange={(e) => setCoverContact(e.target.value)}
                 placeholder="hello@example.com"
                 className="mt-2 text-base"
               />
-              {coverErrors.contact && <p className="mt-1.5 text-sm text-accent">{coverErrors.contact}</p>}
+              {coverErrors.contact && (
+                <p className="mt-1.5 text-sm text-accent">
+                  {coverErrors.contact}
+                </p>
+              )}
             </div>
             <div className="sm:col-span-2">
-              <label className="text-sm tracking-[0.3em] uppercase text-muted">Ссылка на оригинальный трек</label>
+              <label className="text-sm tracking-[0.3em] uppercase text-muted">
+                Ссылка на оригинальный трек
+              </label>
               <input
                 value={coverTrack}
                 onChange={(e) => setCoverTrack(e.target.value)}
                 placeholder="https://youtube.com/... или Spotify"
                 className="mt-2 text-base"
               />
-              {coverErrors.track && <p className="mt-1.5 text-sm text-accent">{coverErrors.track}</p>}
+              {coverErrors.track && (
+                <p className="mt-1.5 text-sm text-accent">
+                  {coverErrors.track}
+                </p>
+              )}
             </div>
-
             <div className="sm:col-span-2">
               <label className="text-sm tracking-[0.3em] uppercase text-muted">
                 Этапы ({coverStages.length})
               </label>
-              <div className="mt-3 grid gap-2">
-                {COVER_STAGES.map((stage) => {
-                  const Icon = STAGE_ICONS[stage.id]
-                  const checked = coverStages.includes(stage.id)
-                  return (
-                    <label
-                      key={stage.id}
-                      className={`flex items-center gap-3 p-3 sm:p-4 rounded-2xl border cursor-pointer transition-colors ${
-                        checked
-                          ? 'border-fire bg-fireSoft/40'
-                          : 'border-border bg-surface-soft/40 hover:border-accent/40'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleStage(stage.id)}
-                        className="sr-only"
-                      />
-                      <span
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                          checked ? 'bg-fire text-white' : 'bg-fireSoft text-accent'
+              {stagesLoading ? (
+                <div className="mt-3 flex items-center gap-2 text-muted">
+                  <Loader2 size={16} className="animate-spin" />
+                  Загружаем этапы...
+                </div>
+              ) : (
+                <div className="mt-3 grid gap-2">
+                  {stages.map((stage) => {
+                    const Icon = STAGE_ICONS[stage.id]
+                    const checked = coverStages.includes(stage.id)
+                    return (
+                      <label
+                        key={stage.id}
+                        className={`flex items-center gap-3 p-3 sm:p-4 rounded-2xl border cursor-pointer transition-colors ${
+                          checked
+                            ? 'border-fire bg-fireSoft/40'
+                            : 'border-border bg-surface-soft/40 hover:border-accent/40'
                         }`}
                       >
-                        <Icon size={16} />
-                      </span>
-                      <span className="flex-1 min-w-0">
-                        <span className="block text-base font-medium leading-tight">{stage.title}</span>
-                        <span className="block text-sm text-muted leading-snug mt-0.5">
-                          {stage.description}
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleStage(stage.id)}
+                          className="sr-only"
+                        />
+                        <span
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                            checked
+                              ? 'bg-fire text-white'
+                              : 'bg-fireSoft text-accent'
+                          }`}
+                        >
+                          <Icon size={16} />
                         </span>
-                      </span>
-                      <span className="font-display text-xl text-fire shrink-0">
-                        {stage.basePrice.toLocaleString('ru-RU')} ₽
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-base font-medium leading-tight">
+                            {stage.title}
+                          </span>
+                          <span className="block text-sm text-muted leading-snug mt-0.5">
+                            {stage.description}
+                          </span>
+                        </span>
+                        <span className="font-display text-xl text-fire shrink-0">
+                          {stage.basePrice.toLocaleString('ru-RU')} ₽
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
               {coverErrors.stages && (
-                <p className="mt-1.5 text-sm text-accent">{coverErrors.stages}</p>
+                <p className="mt-1.5 text-sm text-accent">
+                  {coverErrors.stages}
+                </p>
               )}
             </div>
-
             <div className="sm:col-span-2 surface-soft p-4 flex items-center justify-between gap-4 flex-wrap">
               <div>
-                <div className="text-sm tracking-[0.3em] uppercase text-muted">Итого</div>
+                <div className="text-sm tracking-[0.3em] uppercase text-muted">
+                  Итого
+                </div>
                 <div className="font-display text-4xl text-fire mt-1">
                   {coverCalc.total.toLocaleString('ru-RU')} ₽
                 </div>
                 {coverCalc.clamped && (
                   <div className="text-sm text-muted mt-1">
-                    Минимальный заказ — {COVER_MIN_PRICE.toLocaleString('ru-RU')} ₽
+                    Минимальный заказ —{' '}
+                    {COVER_MIN_PRICE.toLocaleString('ru-RU')} ₽
                   </div>
                 )}
                 {coverCalc.exceedsMax && (
                   <div className="text-sm text-accent mt-1 flex items-start gap-1.5">
-                    <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                    <AlertCircle
+                      size={14}
+                      className="mt-0.5 shrink-0"
+                    />
                     <span>
-                      Сумма превышает обычный диапазон (от {COVER_MIN_PRICE.toLocaleString('ru-RU')} до {COVER_MAX_PRICE.toLocaleString('ru-RU')} ₽) —
+                      Сумма превышает обычный диапазон (от{' '}
+                      {COVER_MIN_PRICE.toLocaleString('ru-RU')} до{' '}
+                      {COVER_MAX_PRICE.toLocaleString('ru-RU')} ₽) —
                       оставьте заявку, обсудим индивидуально. Финальная цена
                       зависит от сложности трека.
                     </span>
@@ -617,12 +712,16 @@ export default function ServicesCoverPage() {
               </div>
               <div className="text-sm text-muted text-right">
                 <div>Выбрано этапов: {coverStages.length}</div>
-                <div>Сумма без округления: {coverCalc.raw.toLocaleString('ru-RU')} ₽</div>
+                <div>
+                  Сумма без округления:{' '}
+                  {coverCalc.raw.toLocaleString('ru-RU')} ₽
+                </div>
               </div>
             </div>
-
             <div className="sm:col-span-2">
-              <label className="text-sm tracking-[0.3em] uppercase text-muted">Комментарий</label>
+              <label className="text-sm tracking-[0.3em] uppercase text-muted">
+                Комментарий
+              </label>
               <textarea
                 value={coverComment}
                 onChange={(e) => setCoverComment(e.target.value)}

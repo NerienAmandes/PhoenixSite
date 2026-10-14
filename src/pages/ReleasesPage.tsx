@@ -12,8 +12,10 @@ import InlineYouTubePlayer from '../components/InlineYouTubePlayer'
 import type { Release } from '../types'
 
 type Tab = 'covers' | 'upcoming' | 'released'
-
 type MemberLite = { slug: string; display_name: string }
+
+// Стабильная константа, чтобы не создавать новый [] на каждый рендер
+const EMPTY_RELEASES: Release[] = []
 
 export default function ReleasesPage() {
   useDocumentTitle('Релизы')
@@ -22,6 +24,7 @@ export default function ReleasesPage() {
     description:
       'Каверы FirePhoenix на русском: вышедшие и предстоящие релизы с прогрессом производства.',
   })
+
   const [tab, setTab] = useState<Tab>('upcoming')
   const [selectedVideo, setSelectedVideo] = useState<{
     id: string
@@ -29,10 +32,14 @@ export default function ReleasesPage() {
     youtubeId: string
   } | null>(null)
 
+  // Состояние фильтров живёт ЗДЕСЬ (контролируемые фильтры)
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  const [selectedLang, setSelectedLang] = useState('')
+
   const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
   const { releases: dbReleases, loading: releasesLoading } = useReleases()
 
-  // Для фильтра по участникам — подтягиваем активных участников.
+  // Активные участники для фильтра
   const [members, setMembers] = useState<MemberLite[]>([])
   useEffect(() => {
     let cancelled = false
@@ -56,14 +63,17 @@ export default function ReleasesPage() {
     }
   }, [])
 
-  const portfolio =
-    ytVideos.length > 0
-      ? ytVideos.map((vid) => ({
-        id: vid.id,
-        title: vid.title,
-        youtubeId: vid.youtubeId,
-      }))
-      : []
+  const portfolio = useMemo(
+    () =>
+      ytVideos.length > 0
+        ? ytVideos.map((vid) => ({
+            id: vid.id,
+            title: vid.title,
+            youtubeId: vid.youtubeId,
+          }))
+        : [],
+    [ytVideos],
+  )
 
   const tabs: { id: Tab; label: string; icon?: any }[] = [
     { id: 'upcoming', label: 'Предстоящие', icon: Sparkles },
@@ -71,39 +81,51 @@ export default function ReleasesPage() {
     { id: 'covers', label: 'Каверы', icon: Youtube },
   ]
 
-  const allUpcoming = dbReleases.filter((r) => r.status === 'upcoming')
-  const allReleased = dbReleases.filter((r) => r.status === 'released')
+  // 🛡️ Стабильная ссылка: либо массив из хука, либо константа
+  const safeReleases = Array.isArray(dbReleases) ? dbReleases : EMPTY_RELEASES
 
-  // Список, отфильтрованный по выбранным фильтрам. Храним отдельно для
-  // каждой вкладки — фильтр применяется к обеим, но при переключении таба
-  // состояние сохраняется.
-  const [filteredUpcoming, setFilteredUpcoming] = useState<Release[]>(allUpcoming)
-  const [filteredReleased, setFilteredReleased] = useState<Release[]>(allReleased)
-
-  // Актуальные списки для фильтра — мержим оба массива, чтобы фильтр показывал
-  // участников и языки из обоих табов (юзер может переключиться, не теряя выбор).
-  const filterSource = useMemo<Release[]>(
-    () => [...allUpcoming, ...allReleased],
-    [allUpcoming, allReleased],
+  const allUpcoming = useMemo(
+    () => safeReleases.filter((r) => r.status === 'upcoming'),
+    [safeReleases],
+  )
+  const allReleased = useMemo(
+    () => safeReleases.filter((r) => r.status === 'released'),
+    [safeReleases],
   )
 
-  // При смене списков (новые данные) — сбрасываем фильтр в «все».
-  useEffect(() => {
-    setFilteredUpcoming(allUpcoming)
-    setFilteredReleased(allReleased)
-  }, [allUpcoming, allReleased])
+  // Только участники, у которых есть релизы
+  const memberOptions = useMemo(() => {
+    const slugs = new Set<string>()
+    for (const r of safeReleases) {
+      for (const s of r.credits ?? []) slugs.add(s)
+    }
+    return members
+      .filter((m) => slugs.has(m.slug))
+      .map((m) => ({ slug: m.slug, name: m.display_name }))
+  }, [members, safeReleases])
 
-  const memberOptions = useMemo(
-    () => members.map((m) => ({ slug: m.slug, name: m.display_name })),
-    [members],
-  )
+  // Фильтрация через useMemo — БЕЗ setState, БЕЗ useEffect, БЕЗ циклов
+  const filteredUpcoming = useMemo(() => {
+    return allUpcoming.filter((r) => {
+      if (selectedLang && (r.originalLanguage ?? '').toLowerCase() !== selectedLang) return false
+      if (selectedMembers.length > 0) {
+        const credits = r.credits ?? []
+        if (!selectedMembers.some((s) => credits.includes(s))) return false
+      }
+      return true
+    })
+  }, [allUpcoming, selectedLang, selectedMembers])
 
-  const handleFiltered = (list: Release[]) => {
-    // Применяем отфильтрованный список к обеим вкладкам, если таба выгодна.
-    // Фильтр «прогоняет» через оба массива.
-    setFilteredUpcoming(list.filter((r) => r.status === 'upcoming'))
-    setFilteredReleased(list.filter((r) => r.status === 'released'))
-  }
+  const filteredReleased = useMemo(() => {
+    return allReleased.filter((r) => {
+      if (selectedLang && (r.originalLanguage ?? '').toLowerCase() !== selectedLang) return false
+      if (selectedMembers.length > 0) {
+        const credits = r.credits ?? []
+        if (!selectedMembers.some((s) => credits.includes(s))) return false
+      }
+      return true
+    })
+  }, [allReleased, selectedLang, selectedMembers])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
@@ -123,7 +145,7 @@ export default function ReleasesPage() {
       </div>
 
       <div className="sticky top-24 z-20 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 mt-10">
-        <div className="surface p-1.5 inline-flex flex-wrap gap-1 mb-8 backdrop-blur">
+        <div className="surface p-1.5 inline-flex flex-wrap gap-1 mb-4 backdrop-blur">
           {tabs.map((t) => {
             const active = tab === t.id
             const Icon = t.icon
@@ -131,10 +153,9 @@ export default function ReleasesPage() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-5 py-2.5 rounded-xl text-sm tracking-wide transition-all inline-flex items-center gap-2 ${active
-                    ? 'bg-fire text-white shadow-glow'
-                    : 'text-muted hover:text-ink'
-                  }`}
+                className={`px-5 py-2.5 rounded-xl text-sm tracking-wide transition-all inline-flex items-center gap-2 ${
+                  active ? 'bg-fire text-white shadow-glow' : 'text-muted hover:text-ink'
+                }`}
               >
                 {Icon && <Icon size={14} />}
                 {t.label}
@@ -144,13 +165,13 @@ export default function ReleasesPage() {
         </div>
       </div>
 
-      {/* Панель фильтров — показываем только для табов с релизами БД,
-          для «Каверов» (YouTube-плейлист) фильтры бессмысленны. */}
       {tab !== 'covers' && (
         <ReleaseFilters
-          releases={filterSource}
           members={memberOptions}
-          onFiltered={handleFiltered}
+          selectedMembers={selectedMembers}
+          onMemberChange={setSelectedMembers}
+          selectedLang={selectedLang}
+          onLangChange={setSelectedLang}
         />
       )}
 
@@ -162,17 +183,15 @@ export default function ReleasesPage() {
               <Loader2 size={48} className="animate-spin text-fire" />
             </div>
           )}
-
           {ytError && (
             <div className="mt-4 p-4 rounded-xl bg-red-100 border border-red-300 text-red-800 text-sm">
-              <strong>Ошибка YouTube API:</strong> {ytError}
+              <strong>YouTube недоступен локально:</strong> {ytError}
               <br />
               <span className="text-xs opacity-70">
-                Проверьте, что API ключ включён и плейлист публичный.
+                Это нормально при npm run dev — serverless-функции /api работают только на Vercel или через vercel dev.
               </span>
             </div>
           )}
-
           {!ytLoading && (
             <>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -183,10 +202,7 @@ export default function ReleasesPage() {
                     style={{ animationDelay: `${i * 0.05}s` }}
                     onClick={() => setSelectedVideo(p)}
                   >
-                    <InlineYouTubePlayer
-                      youtubeId={p.youtubeId}
-                      title={p.title}
-                    />
+                    <InlineYouTubePlayer youtubeId={p.youtubeId} title={p.title} />
                     <div className="p-5">
                       <div className="font-display text-2xl leading-tight group-hover:text-accent transition-colors">
                         {p.title}
@@ -198,7 +214,6 @@ export default function ReleasesPage() {
                   </div>
                 ))}
               </div>
-
               {portfolio.length === 0 && !ytError && (
                 <div className="mt-12 text-center text-muted">
                   Каверы загружаются через YouTube API. Если здесь пусто,

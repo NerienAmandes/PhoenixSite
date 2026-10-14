@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useMeta } from '../hooks/useMeta'
 import { useServices } from '../hooks/useServices'
+import { useLyricsServiceDetails } from '../hooks/useLyricsServiceDetails'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
 import { getSocial } from '../config/team'
 import {
@@ -21,27 +22,6 @@ import {
 import { isValidEmail, isValidName } from '../utils/validators'
 import AdaptationExampleView from '../components/AdaptationExampleView'
 
-const priceTable = [
-  { size: 'TV-size', duration: 'до 2-х минут', price: 'от 500 ₽', japanese: 'от 700 ₽' },
-  { size: 'Full-size', duration: 'от 2-х до 4-х минут', price: 'от 1 000 ₽', japanese: 'от 1 400 ₽' },
-  { size: 'Длинные треки', duration: 'от 4-х минут', price: '+100 ₽ / мин', japanese: 'по стандартной сетке' },
-]
-
-const factors = [
-  { title: 'Высокий темп', text: 'Очень быстрый ритм или речитатив.' },
-  { title: 'Плотность текста', text: 'Большой объём смысла в малом количестве слогов.' },
-  { title: 'Специфика', text: 'K-pop, рэп, узкоспециализированные фэндомы.' },
-  { title: 'Язык', text: 'Работа с японским языком и сложными лингвистическими структурами.' },
-]
-
-const conditions = [
-  { title: 'Предоплата', text: 'Работаем по предоплате от 50% до 100% от стоимости заказа.' },
-  { title: 'Сроки', text: 'Стандартный дедлайн — от 3-х дней.' },
-  { title: 'Отказ от заказа', text: 'Если вы решили отказаться после того, как мы выполнили треть и более работы, предоплата не возвращается.' },
-  { title: 'Право на отказ', text: 'Мы оставляем за собой право отказаться от заказа, если песня слишком сложная или не подходит по тематике.' },
-  { title: 'Правки', text: 'В рамках одного заказа — бесплатная корректировка текста по вашим замечаниям.' },
-]
-
 export default function ServicesLyricsPage() {
   useDocumentTitle('Адаптация текстов')
   useMeta({
@@ -49,7 +29,9 @@ export default function ServicesLyricsPage() {
     description:
       'Заказать адаптацию текста песни на русский: с любого языка, с рифмой и сохранением смысла. Срок — от 3 дней.',
   })
+
   const { services, loading: servicesLoading } = useServices()
+  const { prices, factors, conditions, loading: detailsLoading } = useLyricsServiceDetails()
   const addSubmission = useSubmissionsStore((s) => s.add)
 
   const [form, setForm] = useState({
@@ -79,7 +61,7 @@ export default function ServicesLyricsPage() {
         let detail = ''
         try {
           const data = await res.json()
-          detail = data?.error ? ` — ${data.error}` : ''
+          detail = data?.error ? `— ${data.error}` : ''
         } catch {
           /* ignore */
         }
@@ -106,7 +88,7 @@ export default function ServicesLyricsPage() {
     if (Object.keys(next).length > 0) return
 
     const packageTitle = services.find((s) => s.id === form.package)?.title ?? form.package
-
+    
     setLoading(true)
     const errMsg = await submitToTelegram({
       name: form.name,
@@ -117,12 +99,13 @@ export default function ServicesLyricsPage() {
       type: 'service',
       website: form.website,
     })
+    
     if (errMsg) {
       setApiError(errMsg)
       setLoading(false)
       return
     }
-
+    
     try {
       addSubmission({
         userId: '',
@@ -132,7 +115,7 @@ export default function ServicesLyricsPage() {
     } catch (err) {
       console.warn('addSubmission failed (не критично):', err)
     }
-
+    
     setSuccess(true)
     setLoading(false)
     setForm({
@@ -162,6 +145,7 @@ export default function ServicesLyricsPage() {
         песню, которую хочется петь.
       </p>
 
+      {/* Секция: Прайс */}
       <section className="mt-14">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
@@ -173,37 +157,46 @@ export default function ServicesLyricsPage() {
             </h2>
           </div>
         </div>
-
-        <div className="surface overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-border text-sm tracking-[0.3em] uppercase text-muted">
-            <div className="col-span-12 sm:col-span-3">Размер</div>
-            <div className="hidden sm:block sm:col-span-3">Длительность</div>
-            <div className="col-span-7 sm:col-span-3">Стандарт</div>
-            <div className="col-span-5 sm:col-span-3">Японский язык</div>
+        
+        {detailsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 size={40} className="animate-spin text-fire" />
           </div>
-          {priceTable.map((row, i) => (
-            <div
-              key={row.size}
-              className={`grid grid-cols-12 gap-4 px-6 py-5 items-center reveal ${
-                i !== priceTable.length - 1 ? 'border-b border-border' : ''
-              }`}
-              style={{ animationDelay: `${i * 0.05}s` }}
-            >
-              <div className="col-span-12 sm:col-span-3">
-                <div className="font-display text-2xl leading-tight">{row.size}</div>
-                <div className="sm:hidden text-sm text-muted mt-1">{row.duration}</div>
+        ) : (
+          <>
+            <div className="surface overflow-hidden">
+              <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-border text-sm tracking-[0.3em] uppercase text-muted">
+                <div className="col-span-12 sm:col-span-3">Размер</div>
+                <div className="hidden sm:block sm:col-span-3">Длительность</div>
+                <div className="col-span-7 sm:col-span-3">Стандарт</div>
+                <div className="col-span-5 sm:col-span-3">Японский язык</div>
               </div>
-              <div className="hidden sm:block sm:col-span-3 text-base text-muted">{row.duration}</div>
-              <div className="col-span-7 sm:col-span-3 font-display text-2xl text-fire">{row.price}</div>
-              <div className="col-span-5 sm:col-span-3 font-display text-2xl text-warm">{row.japanese}</div>
+              {prices.map((row, i) => (
+                <div
+                  key={row.id}
+                  className={`grid grid-cols-12 gap-4 px-6 py-5 items-center reveal ${
+                    i !== prices.length - 1 ? 'border-b border-border' : ''
+                  }`}
+                  style={{ animationDelay: `${i * 0.05}s` }}
+                >
+                  <div className="col-span-12 sm:col-span-3">
+                    <div className="font-display text-2xl leading-tight">{row.size}</div>
+                    <div className="sm:hidden text-sm text-muted mt-1">{row.duration}</div>
+                  </div>
+                  <div className="hidden sm:block sm:col-span-3 text-base text-muted">{row.duration}</div>
+                  <div className="col-span-7 sm:col-span-3 font-display text-2xl text-fire">{row.price}</div>
+                  <div className="col-span-5 sm:col-span-3 font-display text-2xl text-warm">{row.japanesePrice}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <p className="mt-4 text-base text-muted">
-          * Рекомендуемая цена на «японщину» действует для треков на японском языке и сложных лингвистических структурах.
-        </p>
+            <p className="mt-4 text-base text-muted">
+              * Рекомендуемая цена на «японщину» действует для треков на японском языке и сложных лингвистических структурах.
+            </p>
+          </>
+        )}
       </section>
 
+      {/* Секция: Срочные заказы и Факторы */}
       <section className="mt-16 grid gap-5 lg:grid-cols-2">
         <div className="surface p-7 sm:p-8">
           <div className="flex items-center gap-3">
@@ -229,7 +222,6 @@ export default function ServicesLyricsPage() {
             </span>
           </div>
         </div>
-
         <div className="surface p-7 sm:p-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-fire flex items-center justify-center text-white shadow-glow">
@@ -245,20 +237,28 @@ export default function ServicesLyricsPage() {
           <p className="mt-5 text-lg text-muted leading-relaxed">
             Цена может быть выше базовой, если песня имеет повышенную сложность:
           </p>
-          <ul className="mt-5 grid gap-3 text-base">
-            {factors.map((f) => (
-              <li key={f.title} className="flex items-start gap-3">
-                <span className="mt-2 w-2 h-2 rounded-full bg-fire shrink-0" />
-                <div>
-                  <span className="font-medium text-lg">{f.title}.</span>{' '}
-                  <span className="text-muted">{f.text}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          
+          {detailsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={24} className="animate-spin text-fire" />
+            </div>
+          ) : (
+            <ul className="mt-5 grid gap-3 text-base">
+              {factors.map((f) => (
+                <li key={f.id} className="flex items-start gap-3">
+                  <span className="mt-2 w-2 h-2 rounded-full bg-fire shrink-0" />
+                  <div>
+                    <span className="font-medium text-lg">{f.title}.</span>{' '}
+                    <span className="text-muted">{f.content}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
+      {/* Секция: Пакеты (уже работала через useServices) */}
       <section className="mt-20">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
@@ -273,40 +273,46 @@ export default function ServicesLyricsPage() {
             <PenLine size={16} /> 3 формата под разные задачи
           </div>
         </div>
-
         <div className="grid gap-5 lg:grid-cols-3">
-          {services.map((s, i) => (
-            <div
-              key={s.id}
-              className="surface p-7 sm:p-8 reveal flex flex-col"
-              style={{ animationDelay: `${i * 0.08}s` }}
-            >
-              <h3 className="font-display text-3xl leading-tight">{s.title}</h3>
-              <p className="mt-3 text-base text-muted leading-relaxed">
-                {s.description}
-              </p>
-              <ul className="mt-5 grid gap-2 text-base">
-                {s.includes.map((inc) => (
-                  <li key={inc} className="flex items-start gap-2.5">
-                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-fire shrink-0" />
-                    <span>{inc}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6 pt-5 border-t border-border flex items-end justify-between gap-3 flex-wrap">
-                <div>
-                  <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
-                    Стоимость
+          {servicesLoading ? (
+             <div className="col-span-3 flex items-center justify-center py-12">
+               <Loader2 size={40} className="animate-spin text-fire" />
+             </div>
+          ) : (
+            services.map((s, i) => (
+              <div
+                key={s.id}
+                className="surface p-7 sm:p-8 reveal flex flex-col"
+                style={{ animationDelay: `${i * 0.08}s` }}
+              >
+                <h3 className="font-display text-3xl leading-tight">{s.title}</h3>
+                <p className="mt-3 text-base text-muted leading-relaxed">
+                  {s.description}
+                </p>
+                <ul className="mt-5 grid gap-2 text-base">
+                  {s.includes.map((inc) => (
+                    <li key={inc} className="flex items-start gap-2.5">
+                      <span className="mt-2 w-1.5 h-1.5 rounded-full bg-fire shrink-0" />
+                      <span>{inc}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6 pt-5 border-t border-border flex items-end justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="text-[10px] tracking-[0.3em] uppercase text-muted">
+                      Стоимость
+                    </div>
+                    <div className="font-display text-3xl text-fire mt-1">{s.price}</div>
                   </div>
-                  <div className="font-display text-3xl text-fire mt-1">{s.price}</div>
+                  <div className="text-sm text-muted">⏱ {s.turnaround}</div>
                 </div>
-                <div className="text-sm text-muted">⏱ {s.turnaround}</div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
 
+      {/* Секция: Примеры */}
       <section className="mt-20">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
@@ -326,10 +332,10 @@ export default function ServicesLyricsPage() {
             Заказать свою <ArrowUpRight size={14} />
           </a>
         </div>
-
         <AdaptationExampleView />
       </section>
 
+      {/* Секция: Условия работы */}
       <section className="mt-20">
         <div className="flex items-end justify-between flex-wrap gap-4 mb-6">
           <div>
@@ -344,47 +350,54 @@ export default function ServicesLyricsPage() {
             <Hammer size={16} /> Нажмите, чтобы раскрыть
           </div>
         </div>
-
-        <div className="grid gap-3">
-          {conditions.map((c, i) => {
-            const open = openCondition === i
-            return (
-              <div key={c.title} className="surface overflow-hidden reveal" style={{ animationDelay: `${i * 0.04}s` }}>
-                <button
-                  onClick={() => setOpenCondition(open ? null : i)}
-                  className="w-full flex items-center justify-between gap-4 p-5 sm:p-6 text-left"
-                >
-                  <div>
-                    <div className="text-sm tracking-[0.3em] uppercase text-accent mb-1">
-                      Пункт {String(i + 1).padStart(2, '0')}
+        
+        {detailsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 size={40} className="animate-spin text-fire" />
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {conditions.map((c, i) => {
+              const open = openCondition === i
+              return (
+                <div key={c.id} className="surface overflow-hidden reveal" style={{ animationDelay: `${i * 0.04}s` }}>
+                  <button
+                    onClick={() => setOpenCondition(open ? null : i)}
+                    className="w-full flex items-center justify-between gap-4 p-5 sm:p-6 text-left"
+                  >
+                    <div>
+                      <div className="text-sm tracking-[0.3em] uppercase text-accent mb-1">
+                        Пункт {String(i + 1).padStart(2, '0')}
+                      </div>
+                      <h3 className="font-display text-3xl leading-tight">{c.title}</h3>
                     </div>
-                    <h3 className="font-display text-3xl leading-tight">{c.title}</h3>
-                  </div>
+                    <div
+                      className={`w-11 h-11 rounded-full bg-fireSoft flex items-center justify-center text-accent transition-transform ${
+                        open ? 'rotate-180' : ''
+                      }`}
+                    >
+                      <ChevronDown size={20} />
+                    </div>
+                  </button>
                   <div
-                    className={`w-11 h-11 rounded-full bg-fireSoft flex items-center justify-center text-accent transition-transform ${
-                      open ? 'rotate-180' : ''
+                    className={`grid transition-all duration-500 ease-out ${
+                      open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
                     }`}
                   >
-                    <ChevronDown size={20} />
-                  </div>
-                </button>
-                <div
-                  className={`grid transition-all duration-500 ease-out ${
-                    open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                  }`}
-                >
-                  <div className="overflow-hidden">
-                    <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-1 text-lg text-muted leading-relaxed">
-                      {c.text}
+                    <div className="overflow-hidden">
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-1 text-lg text-muted leading-relaxed">
+                        {c.content}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </section>
 
+      {/* Секция: Форма заявки */}
       <div className="mt-20 grid gap-8 lg:grid-cols-12 items-start">
         <div className="lg:col-span-5">
           <h2 className="font-display text-4xl sm:text-5xl">Оставить заявку</h2>
@@ -417,7 +430,6 @@ export default function ServicesLyricsPage() {
             </div>
           </div>
         </div>
-
         <form
           onSubmit={handleSubmit}
           className="lg:col-span-7 surface p-7 sm:p-9 sticky top-24"
@@ -433,7 +445,6 @@ export default function ServicesLyricsPage() {
               </div>
             </div>
           )}
-
           {apiError && (
             <div className="mb-6 surface-soft p-4 text-base flex items-start gap-3 border border-red-300/40">
               <div className="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 shrink-0">
@@ -445,7 +456,6 @@ export default function ServicesLyricsPage() {
               </div>
             </div>
           )}
-
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className="text-sm tracking-[0.3em] uppercase text-muted">
