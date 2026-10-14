@@ -1,7 +1,6 @@
-import { Heart, Play, Calendar } from 'lucide-react'
+import { Play, Calendar, Clock } from 'lucide-react'
 import type { Release } from '../types'
-import { formatDate } from '../utils/formatters'
-import { useFavoritesStore } from '../store/useFavoritesStore'
+import { formatDate, formatCountdown } from '../utils/formatters'
 
 export const UPCOMING_STAGES = [
   'Текст готов',
@@ -24,8 +23,6 @@ interface Props {
 }
 
 export default function ReleaseCard({ release, index = 0 }: Props) {
-  const isFav = useFavoritesStore((s) => s.favorites.includes(release.id))
-  const toggleFav = useFavoritesStore((s) => s.toggle)
   const upcoming = release.status === 'upcoming'
   const currentStage = release.currentStage ?? 0
   const showTimeline = upcoming && release.currentStage !== undefined
@@ -46,17 +43,6 @@ export default function ReleaseCard({ release, index = 0 }: Props) {
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-        <button
-          onClick={() => toggleFav(release.id)}
-          className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all ${
-            isFav
-              ? 'bg-fire text-white'
-              : 'bg-black/40 text-white hover:bg-fire'
-          }`}
-          aria-label={isFav ? 'Убрать из избранного' : 'В избранное'}
-        >
-          <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
-        </button>
         <div className="absolute top-3 left-3">
           {upcoming ? (
             <span className="tag bg-fire text-white border-transparent">
@@ -81,9 +67,32 @@ export default function ReleaseCard({ release, index = 0 }: Props) {
           {release.originalArtist}
         </div>
         <h3 className="font-display text-2xl leading-tight">{release.title}</h3>
-        <div className="mt-3 text-xs text-muted">
-          {upcoming ? 'Релиз' : 'Вышел'} · {formatDate(release.releaseDate)}
-        </div>
+
+        {(() => {
+          const countdown = upcoming ? formatCountdown(release.releaseDate) : null
+          if (countdown) {
+            const toneClass =
+              countdown.tone === 'soon'
+                ? 'text-fire'
+                : countdown.tone === 'past'
+                  ? 'text-muted'
+                  : 'text-accent'
+            return (
+              <div className={`mt-3 flex items-center gap-2 text-sm font-medium ${toneClass}`}>
+                <Clock size={14} />
+                <span>{countdown.text}</span>
+                <span className="text-xs text-muted font-normal">
+                  · {formatDate(release.releaseDate)}
+                </span>
+              </div>
+            )
+          }
+          return (
+            <div className="mt-3 text-xs text-muted">
+              {upcoming ? 'Релиз' : 'Вышел'} · {formatDate(release.releaseDate)}
+            </div>
+          )
+        })()}
 
         {showTimeline && (
           <div className="mt-5 pt-5 border-t border-border">
@@ -96,14 +105,23 @@ export default function ReleaseCard({ release, index = 0 }: Props) {
               </div>
             </div>
 
-            <div className="relative flex items-center">
+            <div
+              className="relative flex items-center"
+              role="list"
+              aria-label={`Прогресс релиза: этап ${currentStage + 1} из ${UPCOMING_STAGES.length} — ${UPCOMING_STAGES[currentStage]}`}
+            >
               {UPCOMING_STAGES.map((stage, idx) => {
                 const isDone = idx < currentStage
                 const isCurrent = idx === currentStage
                 const isLast = idx === UPCOMING_STAGES.length - 1
                 const lineDone = idx < currentStage
                 return (
-                  <div key={idx} className="flex-1 flex items-center min-w-0">
+                  <div
+                    key={idx}
+                    className="flex-1 flex items-center min-w-0"
+                    role="listitem"
+                    aria-current={isCurrent ? 'step' : undefined}
+                  >
                     <div className="relative shrink-0 group/dot">
                       <div
                         className={`rounded-full transition-all ${

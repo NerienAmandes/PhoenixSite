@@ -1,51 +1,20 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MEMBER_CATEGORIES, getMemberCategories } from '../types'
+import { MEMBER_CATEGORIES, getMemberCategories, toUiMember } from '../types'
 import type { MemberCategory } from '../types'
 import MemberCard from '../components/MemberCard'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMeta } from '../hooks/useMeta'
+import { useMembers } from '../hooks/useMembers'
 import { Users, UserX, ArrowUpRight } from 'lucide-react'
-import { supabase, publicUrl } from '../lib/supabase'
-
-type DbMember = {
-  id: string
-  slug: string
-  display_name: string
-  role: string | null
-  tags: string[]
-  birth_mmdd: string | null
-  bio: string | null
-  avatar_path: string | null
-  socials: Record<string, string>
-  is_published: boolean
-  member_status: 'active' | 'former' | 'hidden'
-}
 
 export default function TeamPage() {
   useDocumentTitle('Состав')
-  const [members, setMembers] = useState<DbMember[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchMembers() {
-      // Загружаем только активных. Бывшие — на отдельной странице /team/former.
-      const { data, error } = await supabase
-        .from('members')
-        .select('*')
-        .eq('member_status', 'active')
-        .order('display_name', { ascending: true })
-
-      if (error) {
-        console.error('Ошибка загрузки участников:', error)
-        setMembers([])
-      } else {
-        setMembers(data || [])
-      }
-      setLoading(false)
-    }
-
-    fetchMembers()
-  }, [])
+  useMeta({
+    title: 'Состав FirePhoenix',
+    description:
+      'Вокалисты, звукари, художники и монтажёры FirePhoenix — все, кто делает каверы на русском.',
+  })
+  const { members, loading } = useMembers({ status: 'active' })
 
   if (loading) {
     return (
@@ -56,8 +25,7 @@ export default function TeamPage() {
   }
 
   // Группировка активных по категориям
-  const activeMembers = members.filter(m => m.member_status === 'active')
-  const grouped: Record<MemberCategory, DbMember[]> = {
+  const grouped: Record<MemberCategory, typeof members> = {
     vocals: [],
     sound: [],
     art: [],
@@ -65,7 +33,7 @@ export default function TeamPage() {
     translators: [],
     admin: [],
   }
-  for (const m of activeMembers) {
+  for (const m of members) {
     for (const cat of getMemberCategories(m.tags)) {
       grouped[cat].push(m)
     }
@@ -105,16 +73,7 @@ export default function TeamPage() {
                   {list.map((m, i) => (
                     <MemberCard
                       key={`${id}-${m.id}`}
-                      member={{
-                        id: m.slug,
-                        name: m.display_name,
-                        role: m.role || undefined,
-                        tags: m.tags,
-                        birthDate: m.birth_mmdd || undefined,
-                        bio: m.bio ?? '',
-                        avatar: publicUrl(m.avatar_path) ?? '',
-                        socials: m.socials || {},
-                      }}
+                      member={toUiMember(m)}
                       index={i}
                     />
                   ))}

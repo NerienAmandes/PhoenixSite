@@ -1,15 +1,27 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMeta } from '../hooks/useMeta'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
 import { useReleases } from '../hooks/useReleases'
+import { supabase } from '../lib/supabase'
 import { Youtube, Loader2, Sparkles, X, Disc3 } from 'lucide-react'
 import ReleaseCard from '../components/ReleaseCard'
+import ReleaseFilters from '../components/ReleaseFilters'
+import NotifySubscribeBanner from '../components/NotifySubscribeBanner'
 import InlineYouTubePlayer from '../components/InlineYouTubePlayer'
+import type { Release } from '../types'
 
 type Tab = 'covers' | 'upcoming' | 'released'
 
+type MemberLite = { slug: string; display_name: string }
+
 export default function ReleasesPage() {
   useDocumentTitle('Релизы')
+  useMeta({
+    title: 'Релизы FirePhoenix',
+    description:
+      'Каверы FirePhoenix на русском: вышедшие и предстоящие релизы с прогрессом производства.',
+  })
   const [tab, setTab] = useState<Tab>('upcoming')
   const [selectedVideo, setSelectedVideo] = useState<{
     id: string
@@ -19,6 +31,30 @@ export default function ReleasesPage() {
 
   const { videos: ytVideos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
   const { releases: dbReleases, loading: releasesLoading } = useReleases()
+
+  // Для фильтра по участникам — подтягиваем активных участников.
+  const [members, setMembers] = useState<MemberLite[]>([])
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const { data } = await supabase
+        .from('members')
+        .select('slug, display_name')
+        .eq('member_status', 'active')
+        .order('display_name')
+      if (!cancelled && data) {
+        setMembers(
+          (data as MemberLite[]).map((m) => ({
+            slug: m.slug,
+            display_name: m.display_name,
+          })),
+        )
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const portfolio =
     ytVideos.length > 0
@@ -35,8 +71,39 @@ export default function ReleasesPage() {
     { id: 'covers', label: 'Каверы', icon: Youtube },
   ]
 
-  const upcomingReleases = dbReleases.filter((r) => r.status === 'upcoming')
-  const releasedReleases = dbReleases.filter((r) => r.status === 'released')
+  const allUpcoming = dbReleases.filter((r) => r.status === 'upcoming')
+  const allReleased = dbReleases.filter((r) => r.status === 'released')
+
+  // Список, отфильтрованный по выбранным фильтрам. Храним отдельно для
+  // каждой вкладки — фильтр применяется к обеим, но при переключении таба
+  // состояние сохраняется.
+  const [filteredUpcoming, setFilteredUpcoming] = useState<Release[]>(allUpcoming)
+  const [filteredReleased, setFilteredReleased] = useState<Release[]>(allReleased)
+
+  // Актуальные списки для фильтра — мержим оба массива, чтобы фильтр показывал
+  // участников и языки из обоих табов (юзер может переключиться, не теряя выбор).
+  const filterSource = useMemo<Release[]>(
+    () => [...allUpcoming, ...allReleased],
+    [allUpcoming, allReleased],
+  )
+
+  // При смене списков (новые данные) — сбрасываем фильтр в «все».
+  useEffect(() => {
+    setFilteredUpcoming(allUpcoming)
+    setFilteredReleased(allReleased)
+  }, [allUpcoming, allReleased])
+
+  const memberOptions = useMemo(
+    () => members.map((m) => ({ slug: m.slug, name: m.display_name })),
+    [members],
+  )
+
+  const handleFiltered = (list: Release[]) => {
+    // Применяем отфильтрованный список к обеим вкладкам, если таба выгодна.
+    // Фильтр «прогоняет» через оба массива.
+    setFilteredUpcoming(list.filter((r) => r.status === 'upcoming'))
+    setFilteredReleased(list.filter((r) => r.status === 'released'))
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
@@ -50,6 +117,10 @@ export default function ReleasesPage() {
         Грядущие каверы, уже вышедшие релизы и студийные видео — всё, что
         создаёт команда.
       </p>
+
+      <div className="mt-8">
+        <NotifySubscribeBanner />
+      </div>
 
       <div className="sticky top-24 z-20 -mx-4 sm:mx-0 px-4 sm:px-0 py-4 mt-10">
         <div className="surface p-1.5 inline-flex flex-wrap gap-1 mb-8 backdrop-blur">
@@ -72,6 +143,16 @@ export default function ReleasesPage() {
           })}
         </div>
       </div>
+
+      {/* Панель фильтров — показываем только для табов с релизами БД,
+          для «Каверов» (YouTube-плейлист) фильтры бессмысленны. */}
+      {tab !== 'covers' && (
+        <ReleaseFilters
+          releases={filterSource}
+          members={memberOptions}
+          onFiltered={handleFiltered}
+        />
+      )}
 
       {/* Вкладка: Каверы (YouTube) */}
       {tab === 'covers' && (
@@ -146,15 +227,17 @@ export default function ReleasesPage() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {upcomingReleases.map((r, i) => (
+              {filteredUpcoming.map((r, i) => (
                 <ReleaseCard key={r.id} release={r} index={i} />
               ))}
             </div>
           )}
 
-          {!releasesLoading && upcomingReleases.length === 0 && (
+          {!releasesLoading && filteredUpcoming.length === 0 && (
             <div className="mt-12 text-center text-muted">
-              Пока нет анонсированных релизов.
+              {allUpcoming.length === 0
+                ? 'Пока нет анонсированных релизов.'
+                : 'Под выбранные фильтры ничего не нашлось. Попробуй сбросить.'}
             </div>
           )}
         </>
@@ -169,16 +252,17 @@ export default function ReleasesPage() {
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {releasedReleases.map((r, i) => (
+              {filteredReleased.map((r, i) => (
                 <ReleaseCard key={r.id} release={r} index={i} />
               ))}
             </div>
           )}
 
-          {!releasesLoading && releasedReleases.length === 0 && (
+          {!releasesLoading && filteredReleased.length === 0 && (
             <div className="mt-12 text-center text-muted">
-              Вышедших релизов пока нет. Загляни позже — здесь появятся
-              каверы, которые уже можно послушать.
+              {allReleased.length === 0
+                ? 'Вышедших релизов пока нет. Загляни позже — здесь появятся каверы, которые уже можно послушать.'
+                : 'Под выбранные фильтры ничего не нашлось. Попробуй сбросить.'}
             </div>
           )}
         </>

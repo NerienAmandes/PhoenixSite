@@ -1,18 +1,29 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, Play, Flame, Eye } from 'lucide-react'
-import { services } from '../data/services'
 import ReleaseCard from '../components/ReleaseCard'
 import ServiceCard from '../components/ServiceCard'
+import BoostyIcon from '../components/BoostyIcon'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMeta } from '../hooks/useMeta'
 import { useYouTubeStats } from '../hooks/useYouTubeStats'
 import { useReleases } from '../hooks/useReleases'
+import { useServices } from '../hooks/useServices'
 import { formatNumber, formatAge, formatDate } from '../utils/formatters'
+import { TEAM_FOUNDED_AT } from '../config/team'
 
 export default function HomePage() {
   useDocumentTitle('Главная')
+  useMeta({
+    title: 'FirePhoenix — кавер-группа',
+    description:
+      'Официальный сайт FirePhoenix. Релизы, состав, услуги адаптации текста и набор музыкантов.',
+  })
+  // Сколько лет существует команда. Используется в hero-блоке как «Почти N лет каверов».
+  const teamAge = new Date().getFullYear() - new Date(TEAM_FOUNDED_AT).getFullYear()
   // Релизы подтягиваются из Supabase (как и на странице «Релизы»).
   // До загрузки массивы пустые — секции покажут плейсхолдеры.
   const { upcoming, released, loading: releasesLoading } = useReleases()
+  const { services } = useServices()
   const { data: ytStats, ageSeconds } = useYouTubeStats()
   // Пока API не ответило, держим цифру из ТЗ как фоллбэк, чтобы не дёргать вёрстку
   const views = ytStats?.views ?? 352212
@@ -47,7 +58,22 @@ export default function HomePage() {
                 живые истории на русском. Наша команда живёт музыкой и радует тех, кто разделяет эту любовь вместе с нами.
                  Почти 7 лет каверов, 7 лет ярких воспоминаний и стремлений.
               </p>
-              <div className="reveal reveal-4 mt-9 flex flex-wrap gap-3">
+              <a
+                href="http://boosty.to/firephoenix_team"
+                target="_blank"
+                rel="noreferrer"
+                className="reveal reveal-4 mt-7 inline-flex items-center gap-2.5 surface-soft px-4 py-2.5 text-sm hover:border-accent transition-colors group"
+              >
+                <BoostyIcon size={16} />
+                <span>
+                  Поддержать команду на <span className="text-fire font-medium">Boosty</span>
+                </span>
+                <ArrowUpRight
+                  size={14}
+                  className="opacity-60 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+                />
+              </a>
+              <div className="reveal reveal-5 mt-5 flex flex-wrap gap-3">
                 <a
                   href={released[0]?.platforms.youtube ?? '#'}
                   target="_blank"
@@ -60,7 +86,7 @@ export default function HomePage() {
                   Заказать адаптацию <ArrowUpRight size={14} />
                 </Link>
               </div>
-              <div className="reveal reveal-5 mt-12 grid grid-cols-3 gap-6 max-w-md">
+              <div className="reveal reveal-6 mt-12 grid grid-cols-3 gap-6 max-w-md">
                 <div>
                   <div className="font-display text-3xl text-fire">~7</div>
                   <div className="text-[10px] tracking-[0.3em] uppercase text-muted min-h-[1.5em]">
@@ -112,10 +138,10 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="text-[10px] tracking-[0.3em] uppercase text-white/80">
-                    С 2019 года
+                    С 30.12.2019
                   </div>
                   <div className="font-display text-2xl mt-1 text-white">
-                    Почти 7 лет каверов
+                    Почти {teamAge} лет каверов
                   </div>
                 </div>
               </div>
@@ -252,8 +278,10 @@ export default function HomePage() {
               Ищем <span className="text-fire">единомышленников</span>
             </h2>
             <p className="mt-5 max-w-2xl mx-auto text-muted">
-              Открыты вакансии для бэк-вокалистов, звукорежиссёра и менеджера
-              по концертам. Если горишь музыкой — нам по пути.
+              Мы всегда рады новым фениксам в нашей команде! Присоединяйся!
+              <br />
+              Мы ищем: вокалистов, текстовиков, тюнотаймеров, звукарей,
+              художников, виддеров и ребят в отдел медиа.
             </p>
             <Link to="/join" className="btn btn-primary mt-7">
               Откликнуться <ArrowUpRight size={14} />

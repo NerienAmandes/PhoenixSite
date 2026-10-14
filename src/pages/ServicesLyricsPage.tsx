@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { services } from '../data/services'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useAuthStore } from '../store/useAuthStore'
+import { useMeta } from '../hooks/useMeta'
+import { useServices } from '../hooks/useServices'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
+import { getSocial } from '../config/team'
 import {
   Check,
   ArrowUpRight,
@@ -43,14 +44,19 @@ const conditions = [
 
 export default function ServicesLyricsPage() {
   useDocumentTitle('Адаптация текстов')
-  const user = useAuthStore((s) => s.user)
+  useMeta({
+    title: 'Адаптация текстов песен',
+    description:
+      'Заказать адаптацию текста песни на русский: с любого языка, с рифмой и сохранением смысла. Срок — от 3 дней.',
+  })
+  const { services, loading: servicesLoading } = useServices()
   const addSubmission = useSubmissionsStore((s) => s.add)
 
   const [form, setForm] = useState({
-    name: user?.name ?? '',
-    contact: user?.email ?? '',
+    name: '',
+    contact: '',
     track: '',
-    package: services[0].id,
+    package: services[0]?.id ?? 'lyrics',
     comment: '',
     website: '',
   })
@@ -119,7 +125,7 @@ export default function ServicesLyricsPage() {
 
     try {
       addSubmission({
-        userId: user?.id,
+        userId: '',
         type: 'service',
         payload: form,
       })
@@ -130,10 +136,10 @@ export default function ServicesLyricsPage() {
     setSuccess(true)
     setLoading(false)
     setForm({
-      name: user?.name ?? '',
-      contact: user?.email ?? '',
+      name: '',
+      contact: '',
       track: '',
-      package: services[0].id,
+      package: services[0]?.id ?? 'lyrics',
       comment: '',
       website: '',
     })
@@ -312,7 +318,7 @@ export default function ServicesLyricsPage() {
             </h2>
           </div>
           <a
-            href="https://t.me/fire_PhoenixTeam"
+            href={getSocial('telegram')?.href}
             target="_blank"
             rel="noreferrer"
             className="btn btn-ghost text-sm"

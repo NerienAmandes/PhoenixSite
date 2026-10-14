@@ -14,16 +14,16 @@ export default function ServiceCard({ service, index = 0 }: Props) {
       style={{ animationDelay: `${index * 0.08}s` }}
     >
       <div className="absolute -bottom-12 -right-12 w-44 h-44 rounded-full bg-fire opacity-20 blur-3xl" />
-      <div className="text-[10px] tracking-[0.3em] uppercase text-accent mb-2">
+      <div className="text-xs md:text-sm tracking-[0.2em] uppercase text-accent mb-2">
         Пакет {String(index + 1).padStart(2, '0')}
       </div>
-      <h3 className="font-display text-2xl leading-tight max-w-xs">
+      <h3 className="font-display text-2xl md:text-3xl leading-tight max-w-xs">
         {service.title}
       </h3>
-      <p className="mt-3 text-sm text-muted leading-relaxed">
+      <p className="mt-3 text-sm md:text-base text-muted leading-relaxed">
         {service.description}
       </p>
-      <ul className="mt-5 grid gap-2.5 text-sm">
+      <ul className="mt-5 grid gap-2.5 text-sm md:text-base">
         {service.includes.map((item) => (
           <li key={item} className="flex items-start gap-2.5">
             <span className="mt-0.5 w-5 h-5 rounded-full bg-fireSoft flex items-center justify-center text-accent shrink-0">
@@ -35,17 +35,23 @@ export default function ServiceCard({ service, index = 0 }: Props) {
       </ul>
       <div className="mt-6 pt-5 border-t border-border flex items-end justify-between">
         <div>
-          <div className="text-[10px] tracking-[0.3em] uppercase text-muted">Стоимость</div>
-          <div className="font-display text-2xl text-fire">{service.price}</div>
+          <div className="text-xs md:text-sm tracking-[0.2em] uppercase text-muted">
+            Стоимость
+          </div>
+          <div className="font-display text-2xl md:text-3xl text-fire">
+            {service.price}
+          </div>
         </div>
         <div className="text-right">
-          <div className="text-[10px] tracking-[0.3em] uppercase text-muted">Срок</div>
-          <div className="text-sm">{service.turnaround}</div>
+          <div className="text-xs md:text-sm tracking-[0.2em] uppercase text-muted">
+            Срок
+          </div>
+          <div className="text-sm md:text-base">{service.turnaround}</div>
         </div>
       </div>
       <Link
         to="/services"
-        className="mt-6 inline-flex items-center gap-1.5 text-xs tracking-[0.2em] uppercase text-accent hover:underline"
+        className="mt-6 inline-flex items-center gap-1.5 text-xs md:text-sm tracking-[0.15em] uppercase text-accent hover:underline"
       >
         Оставить заявку <ArrowUpRight size={12} />
       </Link>

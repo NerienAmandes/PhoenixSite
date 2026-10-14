@@ -28,8 +28,8 @@ interface AdminAuthState {
 }
 
 /**
- * Store для админки. Полностью отделён от useAuthStore (user auth через
- * localStorage) — не путаем зрителей сайта с админами.
+ * Store для админки. Авторизация — через Supabase Auth (email/password).
+ * Отделён от публичной зоны сайта: зрителям регистрация не нужна.
  */
 export const useAdminAuth = create<AdminAuthState>((set, get) => ({
   session: null,

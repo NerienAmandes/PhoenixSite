@@ -6,8 +6,9 @@ import {
   COVER_DEFAULT_STAGES,
 } from '../data/covers'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useAuthStore } from '../store/useAuthStore'
+import { useMeta } from '../hooks/useMeta'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
+import { getSocial } from '../config/team'
 import { useYouTubePlaylist } from '../hooks/useYouTubePlaylist'
 import {
   Check,
@@ -41,7 +42,11 @@ const STAGE_ICONS: Record<CoverStageId, LucideIcon> = {
 
 export default function ServicesCoverPage() {
   useDocumentTitle('Заказ кавера')
-  const user = useAuthStore((s) => s.user)
+  useMeta({
+    title: 'Кавер под ключ',
+    description:
+      'Заказать кавер на русском под ключ: от адаптации текста до готового видео. Свой набор этапов под бюджет.',
+  })
   const addSubmission = useSubmissionsStore((s) => s.add)
   const { videos, loading: ytLoading, error: ytError } = useYouTubePlaylist()
   const [selectedVideo, setSelectedVideo] = useState<{id: string, title: string, youtubeId: string} | null>(null)
@@ -52,8 +57,8 @@ export default function ServicesCoverPage() {
   // Состояние формы
   const [coverStages, setCoverStages] = useState<CoverStageId[]>(COVER_DEFAULT_STAGES)
   const [coverComment, setCoverComment] = useState('')
-  const [coverName, setCoverName] = useState(user?.name ?? '')
-  const [coverContact, setCoverContact] = useState(user?.email ?? '')
+  const [coverName, setCoverName] = useState('')
+  const [coverContact, setCoverContact] = useState('')
   const [coverTrack, setCoverTrack] = useState('')
   const [coverWebsite, setCoverWebsite] = useState('')
   const [coverErrors, setCoverErrors] = useState<Record<string, string>>({})
@@ -155,7 +160,7 @@ export default function ServicesCoverPage() {
 
     try {
       addSubmission({
-        userId: user?.id,
+        userId: '',
         type: 'cover',
         payload: {
           name: coverName,
@@ -172,8 +177,8 @@ export default function ServicesCoverPage() {
 
     setCoverSuccess(true)
     setCoverLoading(false)
-    setCoverName(user?.name ?? '')
-    setCoverContact(user?.email ?? '')
+    setCoverName('')
+    setCoverContact('')
     setCoverTrack('')
     setCoverStages(COVER_DEFAULT_STAGES)
     setCoverComment('')
@@ -365,7 +370,7 @@ export default function ServicesCoverPage() {
           <div className="surface-soft p-5 text-base text-muted">
             Не удалось подгрузить плейлист — показываем заглушку. Откройте{' '}
             <a
-              href="https://youtube.com/@firephoenix6297"
+              href={getSocial('youtube')?.href}
               target="_blank"
               rel="noreferrer"
               className="text-accent hover:underline"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, publicUrl } from '../lib/supabase'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMembers } from '../hooks/useMembers'
 import { Plus, Trash2, Edit3, Save, X, Upload, Image as ImageIcon } from 'lucide-react'
 
 // ---------- типы, соответствующие колонкам БД ----------
@@ -99,29 +100,10 @@ type View =
 export default function AdminMembersPage() {
   useDocumentTitle('Админка · Участники')
   const [view, setView] = useState<View>({ kind: 'list' })
-  const [members, setMembers] = useState<DbMember[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const load = async () => {
-    setLoading(true)
-    setError(null)
-    const { data, error } = await supabase
-      .from('members')
-      .select('*')
-      .order('display_name', { ascending: true })
-    if (error) {
-      setError(error.message)
-      setMembers([])
-    } else {
-      setMembers((data ?? []) as DbMember[])
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    if (view.kind === 'list') void load()
-  }, [view.kind])
+  const { members, loading, error, refetch } = useMembers({
+    status: 'all',
+    includeHidden: true,
+  })
 
   if (view.kind === 'create') {
     return (
@@ -250,7 +232,7 @@ export default function AdminMembersPage() {
                                 if (error) {
                                   window.alert('Ошибка: ' + error.message)
                                 } else {
-                                  void load()
+                                  void refetch()
                                 }
                               })
                           }

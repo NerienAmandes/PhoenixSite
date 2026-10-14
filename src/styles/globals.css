@@ -327,6 +327,23 @@ textarea {
   border: 1px solid var(--border-soft);
 }
 
+/* Подписи к полям формы — крупнее и читабельнее на десктопе,
+   трекинг умеренный, чтобы кириллица не разваливалась. */
+.form-label {
+  display: block;
+  font-size: 0.75rem;        /* 12px — text-xs */
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .form-label {
+    font-size: 0.8125rem;    /* 13px — крупнее на десктопе */
+  }
+}
+
 /* Flame background blob */
 .flame-blob {
   position: absolute;

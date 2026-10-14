@@ -11,9 +11,6 @@ import ServicesHubPage from './pages/ServicesHubPage'
 import ServicesLyricsPage from './pages/ServicesLyricsPage'
 import ServicesCoverPage from './pages/ServicesCoverPage'
 import JoinPage from './pages/JoinPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
 import AdminLayout from './admin/AdminLayout'
 import AdminLoginPage from './admin/AdminLoginPage'
@@ -38,9 +35,6 @@ export default function App() {
           {/* Старый прямой путь оставлен как алиас → хаб */}
           <Route path="/services/all" element={<Navigate to="/services" replace />} />
           <Route path="/join" element={<JoinPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
 
           {/* Админка (отдельный layout с защитой). */}
           <Route path="/admin/login" element={<AdminLoginPage />} />

@@ -1,24 +1,29 @@
 import { useState } from 'react'
-import { vacancies } from '../data/vacancies'
 import VacancyItem from '../components/VacancyItem'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useAuthStore } from '../store/useAuthStore'
+import { useMeta } from '../hooks/useMeta'
+import { useVacancies } from '../hooks/useVacancies'
 import { useSubmissionsStore } from '../store/useSubmissionsStore'
 import { Check, ArrowUpRight, Megaphone, Loader2, AlertCircle } from 'lucide-react'
 import { isValidEmail, isValidName, isValidBirthDate } from '../utils/validators'
 
 export default function JoinPage() {
   useDocumentTitle('Набор')
-  const user = useAuthStore((s) => s.user)
+  useMeta({
+    title: 'Набор в FirePhoenix',
+    description:
+      'Открытые вакансии в FirePhoenix: вокалисты, звукари, художники, виддеры, переводчики, SMM.',
+  })
+  const { vacancies, loading: vacanciesLoading } = useVacancies()
   const addSubmission = useSubmissionsStore((s) => s.add)
 
   const [form, setForm] = useState({
-    name: user?.name ?? '',
-    contact: user?.email ?? '',
+    name: '',
+    contact: '',
     birthDate: '',
     experience: '',
     portfolio: '',
-    role: vacancies[0].id,
+    role: vacancies[0]?.id ?? '',
     website: '', // honeypot
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -76,7 +81,7 @@ export default function JoinPage() {
 
     try {
       addSubmission({
-        userId: user?.id,
+        userId: '',
         type: 'join',
         payload: form,
       })
@@ -87,12 +92,12 @@ export default function JoinPage() {
     setSuccess(true)
     setLoading(false)
     setForm({
-      name: user?.name ?? '',
-      contact: user?.email ?? '',
+      name: '',
+      contact: '',
       birthDate: '',
       experience: '',
       portfolio: '',
-      role: vacancies[0].id,
+      role: vacancies[0]?.id ?? '',
       website: '',
     })
   }
@@ -107,7 +112,7 @@ export default function JoinPage() {
         <br />
         <span className="text-fire">единомышленников</span>
       </h1>
-      <p className="reveal reveal-3 mt-6 max-w-2xl text-lg text-muted">
+      <p className="reveal reveal-3 mt-6 max-w-2xl text-lg md:text-xl text-muted">
         Мы всегда рады новым фениксам в нашей команде! Присоединяйся!
 Мы ищем: вокалистов, текстовиков, тюнотаймеров, звукарей, художников, виддеров и ребят в отдел медиа.
       </p>
@@ -121,14 +126,14 @@ export default function JoinPage() {
       <div className="mt-20 grid gap-8 lg:grid-cols-12 items-start">
         <div className="lg:col-span-5">
           <h2 className="font-display text-4xl sm:text-5xl">Откликнуться</h2>
-          <p className="mt-4 text-muted max-w-md">
+          <p className="mt-4 text-base md:text-lg text-muted max-w-md">
             Если горишь живой музыкой так же, как мы  — оставь отклик. Возможно, именно ты станешь частью Fire Phoenix Team .
           </p>
-          <div className="mt-6 surface-soft p-5 text-sm">
-            <div className="text-[10px] tracking-[0.3em] uppercase text-muted mb-2">
+          <div className="mt-6 surface-soft p-5 text-base">
+            <div className="text-xs md:text-sm tracking-[0.2em] uppercase text-muted mb-3">
               Что мы ценим
             </div>
-            <ul className="grid gap-1.5">
+            <ul className="grid gap-2">
               <li>· Любовь к музыке</li>
               <li>· Ответственность и пунктуальность</li>
               <li>· Умение слышать коллег</li>
@@ -164,7 +169,7 @@ export default function JoinPage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Имя</label>
+              <label className="form-label">Имя</label>
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -174,7 +179,7 @@ export default function JoinPage() {
               {errors.name && <p className="mt-1.5 text-xs text-accent">{errors.name}</p>}
             </div>
             <div>
-              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">E-mail или Telegram</label>
+              <label className="form-label">E-mail или Telegram</label>
               <input
                 value={form.contact}
                 onChange={(e) => setForm({ ...form, contact: e.target.value })}
@@ -184,7 +189,7 @@ export default function JoinPage() {
               {errors.contact && <p className="mt-1.5 text-xs text-accent">{errors.contact}</p>}
             </div>
             <div>
-              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Дата рождения</label>
+              <label className="form-label">Дата рождения</label>
               <input
                 value={form.birthDate}
                 onChange={(e) => {
@@ -202,7 +207,7 @@ export default function JoinPage() {
               {errors.birthDate && <p className="mt-1.5 text-xs text-accent">{errors.birthDate}</p>}
             </div>
             <div>
-              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Вакансия</label>
+              <label className="form-label">Вакансия</label>
               <select
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
@@ -216,7 +221,7 @@ export default function JoinPage() {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Опыт</label>
+              <label className="form-label">Опыт</label>
               <textarea
                 value={form.experience}
                 onChange={(e) => setForm({ ...form, experience: e.target.value })}
@@ -226,14 +231,14 @@ export default function JoinPage() {
               {errors.experience && <p className="mt-1.5 text-xs text-accent">{errors.experience}</p>}
             </div>
             <div className="sm:col-span-2">
-              <label className="text-[10px] tracking-[0.3em] uppercase text-muted">Ссылка на портфолио</label>
+              <label className="form-label">Ссылка на портфолио</label>
               <input
                 value={form.portfolio}
                 onChange={(e) => setForm({ ...form, portfolio: e.target.value })}
                 placeholder="YouTube, Google Drive, Яндекс.Диск — в любом удобном формате"
                 className="mt-2"
               />
-              <p className="mt-1.5 text-xs text-muted">
+              <p className="mt-1.5 text-xs md:text-sm text-muted">
                 Можно прикрепить несколько ссылок через запятую. Подойдёт любое облако, облачное хранилище или видеохостинг.
               </p>
             </div>

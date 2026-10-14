@@ -39,6 +39,7 @@ type DbRelease = {
   description: string | null
   current_stage: number
   is_published: boolean
+  original_language: string | null
 }
 
 type DbMemberLite = {
@@ -66,6 +67,8 @@ type FormState = {
   description: string
   current_stage: number
   is_published: boolean
+  /** Язык оригинала. Свободный текст (Korean, English, Japanese…). */
+  original_language: string
   /** выбранные id участников (из public.members.id — это uuid) */
   creditMemberIds: Set<string>
 }
@@ -81,6 +84,7 @@ const emptyForm: FormState = {
   description: '',
   current_stage: 0,
   is_published: true,
+  original_language: '',
   creditMemberIds: new Set(),
 }
 
@@ -101,6 +105,7 @@ function formFromDb(r: DbRelease, creditIds: string[]): FormState {
     description: r.description ?? '',
     current_stage: r.current_stage ?? 0,
     is_published: r.is_published,
+    original_language: r.original_language ?? '',
     creditMemberIds: new Set(creditIds),
   }
 }
@@ -384,6 +389,7 @@ function ReleaseEditor({
       initial={formFromDb(release, creditIds)}
       isNew={false}
       releaseId={release.id}
+      wasReleased={release.status === 'released'}
       onCancel={onCancel}
       onSaved={onSaved}
     />
@@ -396,12 +402,16 @@ function ReleaseForm({
   initial,
   isNew,
   releaseId,
+  wasReleased: initialWasReleased = false,
   onCancel,
   onSaved,
 }: {
   initial: FormState
   isNew: boolean
   releaseId?: string
+  /** Был ли релиз уже в статусе released ДО редактирования. Используется,
+   * чтобы не слать повторные уведомления подписчикам при правке старого. */
+  wasReleased?: boolean
   onCancel: () => void
   onSaved: () => void
 }) {
@@ -525,7 +535,7 @@ function ReleaseForm({
     const load = async () => {
       const { data } = await supabase
         .from('releases')
-        .select('id, slug, title, original_artist, cover_url, release_date, status, platforms, description, current_stage, is_published')
+        .select('id, slug, title, original_artist, cover_url, release_date, status, platforms, description, current_stage, is_published, original_language')
         .order('release_date', { ascending: false, nullsFirst: false })
         .limit(50)
       if (!cancelled) setDonors((data ?? []) as DbRelease[])
@@ -664,9 +674,15 @@ function ReleaseForm({
       description: form.description.trim() || null,
       current_stage: Number(form.current_stage) || 0,
       is_published: form.is_published,
+      original_language: form.original_language.trim() || null,
     }
 
     setSaving(true)
+
+    // Запоминаем, был ли это уже released — чтобы решить, слать ли уведомления.
+    // (Для редактирования старого released-релиза рассылку не делаем —
+    // иначе подписчики получат «новый релиз» каждый раз при правке.)
+    const wasReleased = !isNew && initialWasReleased
 
     // 1) upsert release
     const { data: upserted, error: upErr } = await supabase
@@ -706,6 +722,35 @@ function ReleaseForm({
         setSaving(false)
         setError('Релиз сохранён, но не удалось сохранить credits: ' + insErr.message)
         return
+      }
+    }
+
+    // 4) Если это новый released-релиз и он опубликован — шлём уведомления
+    // подписчикам Telegram-бота. Не критично: при ошибке логируем, но
+    // закрываем форму как обычно (релиз-то уже сохранён).
+    const isFreshlyPublished = !wasReleased && form.status === 'released' && form.is_published
+    if (isFreshlyPublished) {
+      try {
+        const secret = (import.meta.env.VITE_NOTIFY_SECRET as string | undefined) ?? ''
+        if (secret) {
+          void fetch('/api/notify-new-release', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-notify-secret': secret,
+            },
+            body: JSON.stringify({ releaseId: newReleaseId }),
+          }).catch((err) => {
+            console.warn('Не удалось отправить уведомления о релизе:', err)
+          })
+        } else {
+          console.warn(
+            'VITE_NOTIFY_SECRET не задан — пропускаем рассылку. ' +
+              'Добавь env-переменную в .env.local и в Vercel, чтобы включить.',
+          )
+        }
+      } catch (err) {
+        console.warn('notify-new-release failed:', err)
       }
     }
 
@@ -801,6 +846,36 @@ function ReleaseForm({
             onChange={(e) => setForm({ ...form, release_date: e.target.value })}
             className="mt-2"
           />
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-[10px] tracking-[0.3em] uppercase text-muted">
+            Язык оригинала
+          </label>
+          <input
+            value={form.original_language}
+            onChange={(e) =>
+              setForm({ ...form, original_language: e.target.value })
+            }
+            className="mt-2"
+            placeholder="например: Korean, English, Japanese"
+            list="common-languages"
+          />
+          <datalist id="common-languages">
+            <option value="Korean" />
+            <option value="Japanese" />
+            <option value="English" />
+            <option value="Spanish" />
+            <option value="Chinese" />
+            <option value="Russian" />
+            <option value="French" />
+            <option value="German" />
+          </datalist>
+          <div className="text-xs text-muted mt-1">
+            Используется для фильтра на странице «Релизы». Пусто — язык не указан.
+          </div>
         </div>
       </div>
 

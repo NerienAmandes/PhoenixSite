@@ -13,6 +13,7 @@ import {
 import { supabase, publicUrl } from '../lib/supabase'
 import { getMemberCategories } from '../types'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMeta } from '../hooks/useMeta'
 import { formatDate } from '../utils/formatters'
 
 const socialIcon = {
@@ -57,6 +58,14 @@ export default function MemberDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useDocumentTitle(member ? member.display_name : 'Участник')
+  useMeta({
+    title: member ? `${member.display_name} — участник FirePhoenix` : 'Участник FirePhoenix',
+    description:
+      member?.bio?.slice(0, 160) ??
+      'Профиль участника команды FirePhoenix на официальном сайте.',
+    image: member?.avatar_path ? publicUrl(member.avatar_path) ?? undefined : undefined,
+    type: 'article',
+  })
 
   useEffect(() => {
     async function loadData() {

@@ -86,11 +86,7 @@ export default function AdminLoginPage() {
         </form>
 
         <p className="mt-6 text-xs text-muted">
-          Доступ только для владельца и редакторов команды. Если ты зритель —
-          <a href="/login" className="text-accent hover:underline ml-1">
-            войди как пользователь
-          </a>
-          .
+          Доступ только для владельца и редакторов команды.
         </p>
       </div>
     </div>

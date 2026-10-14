@@ -1,3 +1,5 @@
+import type { DbMember } from '../hooks/useMembers'
+
 export interface Social {
   vk?: string
   telegram?: string
@@ -55,6 +57,20 @@ export type Member = {
   socials: Record<string, string>
 }
 
+/** Маппит строку из БД (snake_case) в UI-представление для `MemberCard`. */
+export function toUiMember(m: DbMember): Member {
+  return {
+    id: m.slug,
+    name: m.display_name,
+    role: m.role || undefined,
+    tags: m.tags ?? [],
+    birthDate: m.birth_mmdd || undefined,
+    bio: m.bio ?? '',
+    avatar: m.avatar_path ?? '',
+    socials: m.socials ?? {},
+  }
+}
+
 export interface ReleasePlatforms {
   spotify?: string
   youtube?: string
@@ -72,7 +88,11 @@ export interface Release {
   platforms: ReleasePlatforms
   description: string
   currentStage?: number
-  /** ID участников, которые поработали над релизом (вокалисты, звукари, художники и т.д.). */
+  /** Язык оригинала (например, "Korean", "English", "Japanese"). */
+  originalLanguage?: string
+  /** ID участников, которые поработали над релизом (вокалисты, звукари, художники и т.д.).
+   *  Хранятся slug'и (а не UUID) — это совпадает с тем, как `id` используется
+   *  на клиенте и совместимо с фильтрами на /releases. */
   credits?: string[]
 }
 
@@ -203,14 +223,8 @@ export interface Vacancy {
 }
 
 // ---------- Пользователи и заявки ----------
-
-export interface User {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  registeredAt: string
-}
+// User больше не используется: авторизация зрителей убрана, осталась
+// только админка, у которой свой Supabase User (@supabase/supabase-js).
 
 export type SubmissionType = 'service' | 'join' | 'cover'
 

@@ -1,41 +1,19 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { supabase, publicUrl } from '../lib/supabase'
+import { useMeta } from '../hooks/useMeta'
+import { useMembers } from '../hooks/useMembers'
+import { toUiMember } from '../types'
 import MemberCard from '../components/MemberCard'
 import { UserX, ArrowLeft } from 'lucide-react'
 
-type DbMember = {
-  id: string
-  slug: string
-  display_name: string
-  role: string | null
-  tags: string[]
-  birth_mmdd: string | null
-  bio: string | null
-  avatar_path: string | null
-  socials: Record<string, string>
-  member_status: 'active' | 'former' | 'hidden'
-}
-
 export default function FormerMembersPage() {
   useDocumentTitle('Бывшие участники')
-  const [members, setMembers] = useState<DbMember[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function load() {
-      const { data, error } = await supabase
-        .from('members')
-        .select('*')
-        .eq('member_status', 'former')
-        .order('display_name', { ascending: true })
-
-      if (!error) setMembers(data || [])
-      setLoading(false)
-    }
-    load()
-  }, [])
+  useMeta({
+    title: 'Бывшие участники FirePhoenix',
+    description:
+      'Те, кто когда-то был частью команды FirePhoenix — благодарность и память.',
+  })
+  const { members, loading } = useMembers({ status: 'former' })
 
   if (loading) {
     return (
@@ -70,20 +48,7 @@ export default function FormerMembersPage() {
       {members.length > 0 ? (
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {members.map((m, i) => (
-            <MemberCard
-              key={m.id}
-              member={{
-                id: m.slug,
-                name: m.display_name,
-                role: m.role || undefined,
-                tags: m.tags,
-                birthDate: m.birth_mmdd || undefined,
-                bio: m.bio ?? '',
-                avatar: publicUrl(m.avatar_path) ?? '',
-                socials: m.socials || {},
-              }}
-              index={i}
-            />
+            <MemberCard key={m.id} member={toUiMember(m)} index={i} />
           ))}
         </div>
       ) : (
