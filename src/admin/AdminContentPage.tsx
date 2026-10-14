@@ -1,9 +1,20 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { ChevronDown, ChevronUp, Loader2, Plus, Save, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Save, Trash2, Plus, Loader2 } from 'lucide-react'
 
-/* ---------- Конфигурации таблиц ---------- */
+// ---------- Утилиты ----------
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9а-яё]+/giu, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64)
+}
+
+// ---------- Конфигурации таблиц ----------
 
 type FieldType = 'text' | 'textarea' | 'number' | 'boolean' | 'lines'
 
@@ -11,7 +22,7 @@ interface FieldDef {
   key: string
   label: string
   type: FieldType
-  immutable?: boolean // первичный ключ — нельзя менять после создания
+  immutable?: boolean
 }
 
 interface EntityConfig {
@@ -21,6 +32,8 @@ interface EntityConfig {
   pkType: 'text' | 'uuid'
   idKey: string
   fields: FieldDef[]
+  /** Поле, из которого автогенерируется slug при создании */
+  titleField?: string
 }
 
 const CONFIGS: EntityConfig[] = [
@@ -30,6 +43,7 @@ const CONFIGS: EntityConfig[] = [
     hint: 'Цены и описания этапов на странице «Кавер под ключ».',
     pkType: 'text',
     idKey: 'id',
+    titleField: 'title',
     fields: [
       { key: 'id', label: 'ID (slug, латиницей)', type: 'text', immutable: true },
       { key: 'title', label: 'Название', type: 'text' },
@@ -45,6 +59,7 @@ const CONFIGS: EntityConfig[] = [
     hint: 'Таблица стоимости на странице «Адаптация текстов».',
     pkType: 'text',
     idKey: 'id',
+    titleField: 'size',
     fields: [
       { key: 'id', label: 'ID (slug)', type: 'text', immutable: true },
       { key: 'size', label: 'Размер (TV-size и т.д.)', type: 'text' },
@@ -55,33 +70,12 @@ const CONFIGS: EntityConfig[] = [
     ],
   },
   {
-    table: 'price_factors',
-    title: 'Факторы цены',
-    pkType: 'uuid',
-    idKey: 'id',
-    fields: [
-      { key: 'title', label: 'Заголовок', type: 'text' },
-      { key: 'content', label: 'Текст', type: 'textarea' },
-      { key: 'sort_order', label: 'Порядок', type: 'number' },
-    ],
-  },
-  {
-    table: 'work_conditions',
-    title: 'Условия работы',
-    pkType: 'uuid',
-    idKey: 'id',
-    fields: [
-      { key: 'title', label: 'Заголовок', type: 'text' },
-      { key: 'content', label: 'Текст', type: 'textarea' },
-      { key: 'sort_order', label: 'Порядок', type: 'number' },
-    ],
-  },
-  {
     table: 'services',
     title: 'Пакеты услуг',
     hint: 'Карточки пакетов на странице «Адаптация текстов».',
     pkType: 'text',
     idKey: 'slug',
+    titleField: 'title',
     fields: [
       { key: 'slug', label: 'Slug (латиницей)', type: 'text', immutable: true },
       { key: 'title', label: 'Название', type: 'text' },
@@ -98,6 +92,7 @@ const CONFIGS: EntityConfig[] = [
     title: 'Вакансии',
     pkType: 'text',
     idKey: 'slug',
+    titleField: 'role',
     fields: [
       { key: 'slug', label: 'Slug (латиницей)', type: 'text', immutable: true },
       { key: 'role', label: 'Название роли', type: 'text' },
@@ -109,52 +104,55 @@ const CONFIGS: EntityConfig[] = [
   },
 ]
 
-/* ---------- Преобразование значений ---------- */
-
-function toForm(config: EntityConfig, row: Record<string, any>): Record<string, any> {
-  const values: Record<string, any> = {}
-  for (const f of config.fields) {
-    const raw = row[f.key]
-    if (f.type === 'lines') values[f.key] = Array.isArray(raw) ? raw.join('\n') : ''
-    else if (f.type === 'number') values[f.key] = raw ?? 0
-    else if (f.type === 'boolean') values[f.key] = Boolean(raw)
-    else values[f.key] = raw ?? ''
-  }
-  return values
-}
+// ---------- Хелперы для работы с формами ----------
 
 function emptyForm(config: EntityConfig): Record<string, any> {
-  const values: Record<string, any> = {}
+  const form: Record<string, any> = {}
   for (const f of config.fields) {
-    if (f.type === 'lines') values[f.key] = ''
-    else if (f.type === 'number') values[f.key] = 0
-    else if (f.type === 'boolean') values[f.key] = true
-    else values[f.key] = ''
+    if (f.type === 'boolean') form[f.key] = false
+    else if (f.type === 'number') form[f.key] = 0
+    else if (f.type === 'lines') form[f.key] = ''
+    else form[f.key] = ''
   }
-  return values
+  return form
+}
+
+function toForm(config: EntityConfig, row: Record<string, any>): Record<string, any> {
+  const form: Record<string, any> = {}
+  for (const f of config.fields) {
+    const val = row[f.key]
+    if (f.type === 'lines' && Array.isArray(val)) {
+      form[f.key] = val.join('\n')
+    } else {
+      form[f.key] = val ?? ''
+    }
+  }
+  return form
 }
 
 function toPayload(
   config: EntityConfig,
   values: Record<string, any>,
-  isNew: boolean,
+  isNew: boolean
 ): Record<string, any> {
   const payload: Record<string, any> = {}
   for (const f of config.fields) {
-    if (!isNew && f.immutable) continue
-    if (f.type === 'lines')
-      payload[f.key] = String(values[f.key] ?? '')
+    if (f.immutable && !isNew) continue
+    let val = values[f.key]
+    if (f.type === 'lines' && typeof val === 'string') {
+      val = val
         .split('\n')
-        .map((s: string) => s.trim())
+        .map((s) => s.trim())
         .filter(Boolean)
-    else if (f.type === 'number') payload[f.key] = Number(values[f.key]) || 0
-    else if (f.type === 'boolean') payload[f.key] = Boolean(values[f.key])
-    else payload[f.key] = String(values[f.key] ?? '')
+    }
+    if (f.type === 'number') val = Number(val) || 0
+    if (f.type === 'text' && typeof val === 'string') val = val.trim()
+    payload[f.key] = val
   }
   return payload
 }
 
-/* ---------- Поле ввода ---------- */
+// ---------- Поле ввода ----------
 
 function FieldInput({
   field,
@@ -215,12 +213,101 @@ function FieldInput({
         onChange={(e) => onChange(e.target.value)}
         className="mt-1 w-full text-base"
         disabled={disabled}
+        placeholder={field.immutable ? 'авто-генерация из названия' : ''}
       />
     </label>
   )
 }
 
-/* ---------- Карточка существующей записи ---------- */
+// ---------- Секция таблицы ----------
+
+function EntitySection({
+  config,
+  defaultOpen,
+}: {
+  config: EntityConfig
+  defaultOpen: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  const [rows, setRows] = useState<Record<string, any>[]>([])
+  const [loading, setLoading] = useState(false)
+  const [creating, setCreating] = useState(false)
+
+  const load = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from(config.table)
+      .select('*')
+      .order(config.idKey === 'sort_order' ? 'sort_order' : config.idKey, {
+        ascending: true,
+      })
+    setLoading(false)
+    if (!error && data) setRows(data)
+  }
+
+  useEffect(() => {
+    if (open) void load()
+  }, [open])
+
+  return (
+    <div className="surface border border-border/50 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left"
+      >
+        <div>
+          <div className="font-display text-2xl">{config.title}</div>
+          {config.hint && (
+            <div className="text-sm text-muted mt-0.5">{config.hint}</div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted">{rows.length} записей</span>
+          {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </div>
+      </button>
+      {open && (
+        <div className="px-5 pb-5 grid gap-3">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={24} className="animate-spin text-fire" />
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="text-muted text-sm py-4">Пока нет записей.</div>
+          ) : (
+            rows.map((row) => (
+              <RowCard
+                key={row[config.idKey]}
+                config={config}
+                row={row}
+                onChanged={load}
+              />
+            ))
+          )}
+          {creating ? (
+            <NewCard
+              config={config}
+              onCreated={() => {
+                setCreating(false)
+                void load()
+              }}
+              onCancel={() => setCreating(false)}
+            />
+          ) : (
+            <button
+              onClick={() => setCreating(true)}
+              className="btn btn-ghost text-sm justify-self-start"
+            >
+              <Plus size={14} /> Добавить
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------- Карточка существующей записи ----------
 
 function RowCard({
   config,
@@ -308,7 +395,7 @@ function RowCard({
   )
 }
 
-/* ---------- Карточка новой записи ---------- */
+// ---------- Карточка новой записи ----------
 
 function NewCard({
   config,
@@ -320,10 +407,23 @@ function NewCard({
   onCancel: () => void
 }) {
   const [values, setValues] = useState(() => emptyForm(config))
+  const [slugTouched, setSlugTouched] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const set = (key: string, v: any) => setValues((p) => ({ ...p, [key]: v }))
+  // Автогенерация slug из названия при создании
+  useEffect(() => {
+    if (slugTouched || config.pkType !== 'text' || !config.titleField) return
+    const titleValue = values[config.titleField]
+    if (typeof titleValue === 'string' && titleValue.trim()) {
+      setValues((v) => ({ ...v, [config.idKey]: slugify(titleValue) }))
+    }
+  }, [values, slugTouched, config])
+
+  const set = (key: string, v: any) => {
+    if (key === config.idKey) setSlugTouched(true)
+    setValues((p) => ({ ...p, [key]: v }))
+  }
 
   const save = async () => {
     if (config.pkType === 'text' && !String(values[config.idKey] ?? '').trim()) {
@@ -363,77 +463,7 @@ function NewCard({
   )
 }
 
-/* ---------- Секция таблицы ---------- */
-
-function EntitySection({ config, defaultOpen = false }: { config: EntityConfig; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen)
-  const [rows, setRows] = useState<Record<string, any>[]>([])
-  const [loading, setLoading] = useState(true)
-  const [adding, setAdding] = useState(false)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    const { data } = await supabase
-      .from(config.table)
-      .select('*')
-      .order('sort_order', { ascending: true })
-    setRows(data ?? [])
-    setLoading(false)
-  }, [config.table])
-
-  useEffect(() => {
-    void load()
-  }, [load])
-
-  return (
-    <section className="surface rounded-2xl border border-border/50 overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
-      >
-        <div>
-          <div className="font-display text-2xl">{config.title}</div>
-          {config.hint && <div className="text-sm text-muted mt-0.5">{config.hint}</div>}
-        </div>
-        {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-      </button>
-      {open && (
-        <div className="px-5 pb-5 grid gap-3">
-          {loading ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="animate-spin text-fire" size={28} />
-            </div>
-          ) : (
-            rows.map((row) => (
-              <RowCard
-                key={String(row[config.idKey])}
-                config={config}
-                row={row}
-                onChanged={load}
-              />
-            ))
-          )}
-          {adding ? (
-            <NewCard
-              config={config}
-              onCreated={() => {
-                setAdding(false)
-                load()
-              }}
-              onCancel={() => setAdding(false)}
-            />
-          ) : (
-            <button onClick={() => setAdding(true)} className="btn btn-ghost self-start text-sm">
-              <Plus size={14} /> Добавить
-            </button>
-          )}
-        </div>
-      )}
-    </section>
-  )
-}
-
-/* ---------- Страница ---------- */
+// ---------- Страница ----------
 
 export default function AdminContentPage() {
   useDocumentTitle('Админка · Контент')
