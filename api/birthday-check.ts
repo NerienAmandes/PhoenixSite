@@ -1,5 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import supabase from '../src/lib/db'
+import { createClient } from '@supabase/supabase-js'
+
+/**
+ * Server-side клиент Supabase с service_role ключом.
+ * Используется только в серверлесс-функциях, обходит RLS.
+ */
+function makeServiceClient() {
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) {
+    throw new Error(
+      'Supabase env vars are missing (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)'
+    )
+  }
+  return createClient(url, key, { auth: { persistSession: false } })
+}
 
 const TG_API = (token: string) =>
   `https://api.telegram.org/bot${token}/sendMessage`
@@ -19,7 +34,7 @@ function getMoscowMMDD(offsetDays = 0): string {
   return `${mm}.${dd}`
 }
 
-/** Возвращает сегодняшнюю дату в МСК в ISO формате (для сравнения с last_notified). */
+/** Возвращает сегодняшнюю дату в МСК в ISO формате (YYYY-MM-DD). */
 function getMoscowTodayISO(): string {
   const MSK_OFFSET = 3 * 60 * 60 * 1000
   const now = new Date()
@@ -80,9 +95,7 @@ export default async function handler(
 
   if (!token) {
     console.error('[birthday-check] TELEGRAM_BOT_TOKEN not set')
-    return res
-      .status(500)
-      .json({ ok: false, error: 'Server is not configured' })
+    return res.status(200).json({ ok: false, error: 'Server is not configured' })
   }
 
   // Защита endpoint'а секретным ключом (если задан в окружении).
@@ -98,6 +111,14 @@ export default async function handler(
   const todayMMDD = getMoscowMMDD(0)
   const inTwoDaysMMDD = getMoscowMMDD(2)
   const todayISO = getMoscowTodayISO()
+
+  let supabase
+  try {
+    supabase = makeServiceClient()
+  } catch (err) {
+    console.error('[birthday-check]', err)
+    return res.status(200).json({ ok: false, error: 'Supabase not configured' })
+  }
 
   try {
     // Участники, у кого ДР сегодня или через 2 дня.
@@ -215,6 +236,6 @@ export default async function handler(
     })
   } catch (err) {
     console.error('[birthday-check] error:', err)
-    return res.status(500).json({ ok: false, error: 'Internal error' })
+    return res.status(200).json({ ok: false, error: 'Internal error' })
   }
 }
