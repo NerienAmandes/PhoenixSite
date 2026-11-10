@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed:supabase": "tsx scripts/seed-supabase.ts",
+    "seed:supabase:apply": "tsx scripts/seed-supabase.ts --apply"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",
@@ -24,6 +26,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.0",
     "typescript": "^5.6.3",
     "vite": "^6.0.5"
   }

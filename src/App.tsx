@@ -5,15 +5,18 @@ import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
 import TeamPage from './pages/TeamPage'
 import MemberDetailPage from './pages/MemberDetailPage'
+import FormerMembersPage from './pages/FormerMembersPage'
 import ReleasesPage from './pages/ReleasesPage'
 import ServicesHubPage from './pages/ServicesHubPage'
 import ServicesLyricsPage from './pages/ServicesLyricsPage'
 import ServicesCoverPage from './pages/ServicesCoverPage'
 import JoinPage from './pages/JoinPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
+import AdminLayout from './admin/AdminLayout'
+import AdminLoginPage from './admin/AdminLoginPage'
+import AdminMembersPage from './admin/AdminMembersPage'
+import AdminReleasesPage from './admin/AdminReleasesPage'
+import AdminContentPage from './admin/AdminContentPage'
 
 export default function App() {
   return (
@@ -24,6 +27,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/team" element={<TeamPage />} />
+          <Route path="/team/former" element={<FormerMembersPage />} />
           <Route path="/team/:memberId" element={<MemberDetailPage />} />
           <Route path="/releases" element={<ReleasesPage />} />
           <Route path="/services" element={<ServicesHubPage />} />
@@ -32,9 +36,16 @@ export default function App() {
           {/* Старый прямой путь оставлен как алиас → хаб */}
           <Route path="/services/all" element={<Navigate to="/services" replace />} />
           <Route path="/join" element={<JoinPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+
+          {/* Админка (отдельный layout с защитой). */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="members" replace />} />
+            <Route path="members" element={<AdminMembersPage />} />
+            <Route path="releases" element={<AdminReleasesPage />} />
+            <Route path="content" element={<AdminContentPage />} />
+          </Route>
+
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

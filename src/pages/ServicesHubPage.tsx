@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMeta } from '../hooks/useMeta'
 import {
   Sparkles,
   Mic2,
@@ -9,6 +10,8 @@ import {
   ShieldCheck,
   Globe2,
 } from 'lucide-react'
+import BoostyIcon from '../components/BoostyIcon'
+import { getSocial } from '../config/team'
 
 const services = [
   {
@@ -51,6 +54,11 @@ const guarantees = [
 
 export default function ServicesHubPage() {
   useDocumentTitle('Услуги')
+  useMeta({
+    title: 'Услуги FirePhoenix',
+    description:
+      'Адаптация текстов песен на русский и каверы под ключ от FirePhoenix: от лирики до готового видео.',
+  })
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
       <div className="reveal reveal-1">
@@ -147,14 +155,24 @@ export default function ServicesHubPage() {
           Не уверены, что выбрать? Напишите нам — подскажем формат под ваш
           трек и подберём разумный бюджет.
         </p>
-        <a
-          href="https://t.me/fire_PhoenixTeam"
-          target="_blank"
-          rel="noreferrer"
-          className="btn btn-primary mt-5"
-        >
-          Спросить в Telegram <ArrowUpRight size={14} />
-        </a>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <a
+            href={getSocial('telegram')?.href}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-primary"
+          >
+            Спросить в Telegram <ArrowUpRight size={14} />
+          </a>
+          <a
+            href={getSocial('boosty')?.href}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-outline"
+          >
+            <BoostyIcon size={14} /> Поддержать на Boosty
+          </a>
+        </div>
       </div>
     </div>
   )

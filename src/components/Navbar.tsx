@@ -184,6 +184,8 @@ export default function Navbar() {
               onClick={() => setOpen((v) => !v)}
               className="lg:hidden btn btn-icon btn-outline"
               aria-label="Меню"
+              aria-expanded={open}
+              aria-controls="mobile-menu"
             >
               {open ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -192,7 +194,7 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {open && (
-          <div className="lg:hidden pb-6 animate-riseIn">
+          <div id="mobile-menu" className="lg:hidden pb-6 animate-riseIn">
             <div className="grid gap-1 surface p-3">
               {links.map((l) => {
                 const hasChildren = !!l.children?.length

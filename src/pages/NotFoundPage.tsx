@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMeta } from '../hooks/useMeta'
 
 export default function NotFoundPage() {
   useDocumentTitle('404')
+  useMeta({
+    title: 'Страница не найдена',
+    description: 'Эта страница сгорела в нашем огне. Вернитесь на главную.',
+  })
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">

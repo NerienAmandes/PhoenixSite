@@ -19,46 +19,25 @@ import {
   Globe2,
 } from 'lucide-react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useMeta } from '../hooks/useMeta'
 import { useYouTubeStats } from '../hooks/useYouTubeStats'
 import { formatNumber, formatAge } from '../utils/formatters'
+import { SOCIALS, TEAM_FOUNDED_LABEL, type SocialId } from '../config/team'
+import BoostyIcon from '../components/BoostyIcon'
+import TikTokIcon from '../components/TikTokIcon'
+import type { ComponentType } from 'react'
 
-function TikTokIcon({ size = 20 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1z" />
-    </svg>
-  )
+// Общий тип для иконки соцсети: подходит и для lucide-компонентов (size: number | string),
+// и для наших обычных функциональных компонентов (size: number). `string` нужен для совместимости
+// с типизацией lucide-иконок (propTypes инвариантны, поэтому более узкий number не подходит).
+type IconComponent = ComponentType<{ size?: number | string }>
+
+const ICONS: Record<SocialId, IconComponent> = {
+  youtube: Youtube,
+  tiktok: TikTokIcon,
+  telegram: Send,
+  boosty: BoostyIcon,
 }
-
-const socials = [
-  {
-    label: 'YouTube',
-    handle: '@firephoenix6297',
-    desc: 'Каверы, Shorts, backstage',
-    href: 'https://youtube.com/@firephoenix6297?si=-jOHXpqn3oIL4UQx',
-    icon: Youtube,
-  },
-  {
-    label: 'TikTok',
-    handle: '@firephoenixteam11',
-    desc: 'Короткие видео и вайбы',
-    href: 'http://tiktok.com/@firephoenixteam11',
-    icon: TikTokIcon,
-  },
-  {
-    label: 'Telegram',
-    handle: '@fire_PhoenixTeam',
-    desc: 'Новости и общение с командой',
-    href: 'https://t.me/fire_PhoenixTeam',
-    icon: Send,
-  },
-]
 
 const stats = [
   { icon: Music, label: 'Стиль', value: 'Кавер · Аниме · Pop' },
@@ -113,7 +92,7 @@ const roles = [
 
 const milestones = [
   {
-    date: '30.12.2019',
+    date: TEAM_FOUNDED_LABEL,
     year: '2019',
     title: 'Начало',
     text: 'Старт нашей деятельности — первая репетиция, первые идеи, первые шаги.',
@@ -165,6 +144,11 @@ const gallery = [
 
 export default function AboutPage() {
   useDocumentTitle('О группе')
+  useMeta({
+    title: 'О группе FirePhoenix',
+    description:
+      'История FirePhoenix с 2019 года: каверы на русском, миссия команды, фотогалерея.',
+  })
   const { data: ytStats, ageSeconds } = useYouTubeStats()
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
@@ -486,11 +470,11 @@ export default function AboutPage() {
         </div>
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {socials.map((s, i) => {
-            const Icon = s.icon
+          {SOCIALS.map((s, i) => {
+            const Icon = ICONS[s.id]
             return (
               <a
-                key={s.label}
+                key={s.id}
                 href={s.href}
                 target="_blank"
                 rel="noreferrer"
@@ -512,7 +496,7 @@ export default function AboutPage() {
                   </div>
                   <div className="text-sm text-accent mt-1">{s.handle}</div>
                   <div className="text-sm sm:text-base text-muted mt-2 leading-relaxed">
-                    {s.desc}
+                    {s.description}
                   </div>
                 </div>
               </a>

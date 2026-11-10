@@ -1,3 +1,6 @@
+import type { DbMember } from '../hooks/useMembers'
+import { publicUrl } from '../lib/supabase' // <-- 1. ДОБАВИЛИ ИМПОРТ
+
 export interface Social {
   vk?: string
   telegram?: string
@@ -14,17 +17,16 @@ export type MemberCategory =
   | 'admin'
 
 export const MEMBER_CATEGORIES: { id: MemberCategory; label: string }[] = [
+  { id: 'admin', label: 'Администрация' },
   { id: 'vocals', label: 'Вокалисты' },
   { id: 'sound', label: 'Звукари' },
   { id: 'art', label: 'Художники' },
   { id: 'video', label: 'Видеомонтажёры' },
   { id: 'translators', label: 'Переводчики' },
-  { id: 'admin', label: 'Администрация' },
 ]
 
 /**
  * Маппинг тегов участника в категории для сортировки на странице «Состав».
- * Используется в `getMemberCategories` ниже.
  */
 const TAG_TO_CATEGORY: Record<string, MemberCategory> = {
   'вокалист': 'vocals',
@@ -32,6 +34,7 @@ const TAG_TO_CATEGORY: Record<string, MemberCategory> = {
   'звукарь': 'sound',
   'художник': 'art',
   'монтажер': 'video',
+  'монтажёр': 'video', // <-- 2. ДОБАВИЛИ ВАРИАНТ С БУКВОЙ Ё (частая причина "пропажи" из категории)
   'переводчик': 'translators',
 }
 
@@ -44,16 +47,29 @@ export function getMemberCategories(tags: string[]): MemberCategory[] {
   return Array.from(cats)
 }
 
-export interface Member {
+export type Member = {
   id: string
   name: string
-  role: string
+  role?: string
   tags: string[]
-  /** Дата рождения в формате «DD.MM» (без года). */
-  birthDate: string
+  birthDate?: string
   bio: string
-  avatar?: string
-  socials: Social
+  avatar: string
+  socials: Record<string, string>
+}
+
+/** Маппит строку из БД (snake_case) в UI-представление для `MemberCard`. */
+export function toUiMember(m: DbMember): Member {
+  return {
+    id: m.slug,
+    name: m.display_name,
+    role: m.role || undefined,
+    tags: m.tags ?? [],
+    birthDate: m.birth_mmdd || undefined,
+    bio: m.bio ?? '',
+    avatar: publicUrl(m.avatar_path) || '', // <-- 3. ИСПРАВИЛИ: теперь путь превращается в полную ссылку + сброс кэша
+    socials: m.socials ?? {},
+  }
 }
 
 export interface ReleasePlatforms {
@@ -73,49 +89,32 @@ export interface Release {
   platforms: ReleasePlatforms
   description: string
   currentStage?: number
-  /** ID участников, которые поработали над релизом (вокалисты, звукари, художники и т.д.). */
+  originalLanguage?: string
   credits?: string[]
 }
 
 // ---------- Примеры адаптаций текстов ----------
 
-/** Одна строка / строфа в параллельном сравнении оригинала и адаптации. */
 export interface AdaptationLine {
-  /** Оригинальная строка (на языке оригинала) */
   original: string
-  /** Строка на русском в нашей адаптации */
   adapted: string
-  /**
-   * Короткая пометка «что тут сделали» (опционально).
-   * Например: «сохранили ритм», «сменили рифму», «добавили образ».
-   * Если null — просто параллельная строка без акцента.
-   */
   note?: string | null
-  /** Тип акцента для визуала (опционально). null/undefined = обычная строка. */
   highlight?: 'rhyme' | 'rhythm' | 'meaning' | 'image' | null
 }
 
 export interface AdaptationVerse {
-  /** Подзаголовок фрагмента: «Куплет 1», «Припев», «Бридж» и т.п. */
   label: string
   lines: AdaptationLine[]
 }
 
 export interface AdaptationExample {
   id: string
-  /** Русское название нашего кавера */
   title: string
-  /** Оригинальный исполнитель и трек */
   originalArtist: string
-  /** Язык оригинала (для подписи колонки) */
   originalLang: string
-  /** Год оригинального трека (опционально) */
   year?: number
-  /** Короткий анонс: о чём фрагмент и что в нём интересного */
   teaser: string
-  /** Несколько параллельных фрагментов */
   verses: AdaptationVerse[]
-  /** Опционально: ссылка на готовый релиз */
   releaseId?: string
 }
 
@@ -143,8 +142,6 @@ export interface CoverStageMeta {
   id: CoverStageId
   title: string
   description: string
-  /** Базовая цена этапа в рублях. Сумма выбранных этапов = стоимость заказа.
-   *  Итог корректируется в зависимости от сложности трека. */
   basePrice: number
 }
 
@@ -204,14 +201,6 @@ export interface Vacancy {
 }
 
 // ---------- Пользователи и заявки ----------
-
-export interface User {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  registeredAt: string
-}
 
 export type SubmissionType = 'service' | 'join' | 'cover'
 
