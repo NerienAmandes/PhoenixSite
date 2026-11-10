@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import pool from '../src/lib/db'
+import supabase from '../src/lib/db'
 
 const TG_API = (token: string, method: string) =>
   `https://api.telegram.org/bot${token}/${method}`
@@ -59,7 +59,6 @@ export default async function handler(
 
   const msg = body?.message
   if (!msg || !msg.text) {
-    // Не текстовое сообщение — игнорируем, но отвечаем 200, чтобы Telegram не переотправлял.
     return res.status(200).json({ ok: true })
   }
 
@@ -70,16 +69,18 @@ export default async function handler(
 
   try {
     if (text === '/start' || text.startsWith('/start@')) {
-      await pool.query(
-        `INSERT INTO release_subscribers (chat_id, username, first_name, active)
-         VALUES ($1, $2, $3, true)
-         ON CONFLICT (chat_id) DO UPDATE
-           SET active = true,
-               username = EXCLUDED.username,
-               first_name = EXCLUDED.first_name,
-               updated_at = now()`,
-        [chatId, username, firstName]
+      // Upsert подписчика
+      const { error } = await supabase.from('release_subscribers').upsert(
+        {
+          chat_id: chatId,
+          username,
+          first_name: firstName,
+          active: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'chat_id' }
       )
+      if (error) throw error
 
       await sendMessage(
         token,
@@ -94,12 +95,12 @@ export default async function handler(
           `/help — справка`
       )
     } else if (text === '/stop' || text.startsWith('/stop@')) {
-      await pool.query(
-        `UPDATE release_subscribers
-         SET active = false, updated_at = now()
-         WHERE chat_id = $1`,
-        [chatId]
-      )
+      const { error } = await supabase
+        .from('release_subscribers')
+        .update({ active: false, updated_at: new Date().toISOString() })
+        .eq('chat_id', chatId)
+      if (error) throw error
+
       await sendMessage(
         token,
         chatId,

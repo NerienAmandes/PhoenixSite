@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import pool from '../src/lib/db'
+import supabase from '../src/lib/db'
 
 const TG_API = (token: string) =>
   `https://api.telegram.org/bot${token}/sendMessage`
@@ -17,6 +17,14 @@ function getMoscowMMDD(offsetDays = 0): string {
   const mm = String(moscow.getUTCMonth() + 1).padStart(2, '0')
   const dd = String(moscow.getUTCDate()).padStart(2, '0')
   return `${mm}.${dd}`
+}
+
+/** Возвращает сегодняшнюю дату в МСК в ISO формате (для сравнения с last_notified). */
+function getMoscowTodayISO(): string {
+  const MSK_OFFSET = 3 * 60 * 60 * 1000
+  const now = new Date()
+  const moscow = new Date(now.getTime() + MSK_OFFSET)
+  return moscow.toISOString().slice(0, 10)
 }
 
 const MONTHS_GENITIVE = [
@@ -50,19 +58,18 @@ interface BirthdayMember {
 
 interface Subscriber {
   chat_id: number
+  last_notified: string | null
 }
 
 /**
  * Endpoint ежедневной проверки дней рождения.
- * Вызывается внешним cron'ом (например, cron-job.org) раз в день.
+ * Вызывается GitHub Actions / cron'ом раз в день.
  *
  * Логика:
  *   1. Берём сегодняшнюю дату (МСК) и дату +2 дня в формате MM.DD.
  *   2. Запрашиваем из БД участников, у которых birth_mmdd совпадает.
- *   3. Рассылаем напоминания всем активным подписчикам.
- *
- * Защита от повторных отправок в один день:
- *   Проверяем поле last_notified подписчика (в таймзоне МСК).
+ *   3. Рассылаем напоминания всем активным подписчикам,
+ *      которым ещё не отправляли сегодня.
  */
 export default async function handler(
   req: VercelRequest,
@@ -90,18 +97,19 @@ export default async function handler(
 
   const todayMMDD = getMoscowMMDD(0)
   const inTwoDaysMMDD = getMoscowMMDD(2)
+  const todayISO = getMoscowTodayISO()
 
   try {
     // Участники, у кого ДР сегодня или через 2 дня.
-    const { rows: members } = await pool.query<BirthdayMember>(
-      `SELECT display_name, birth_mmdd
-       FROM members
-       WHERE birth_mmdd IN ($1, $2)
-         AND is_published = true`,
-      [todayMMDD, inTwoDaysMMDD]
-    )
+    const { data: members, error: membersError } = await supabase
+      .from('members')
+      .select('display_name, birth_mmdd')
+      .in('birth_mmdd', [todayMMDD, inTwoDaysMMDD])
+      .eq('is_published', true)
 
-    if (members.length === 0) {
+    if (membersError) throw membersError
+
+    if (!members || members.length === 0) {
       return res.status(200).json({
         ok: true,
         message: 'Нет дней рождения сегодня или через 2 дня',
@@ -112,30 +120,36 @@ export default async function handler(
       })
     }
 
-    // Активные подписчики, которым ещё не отправляли сегодня.
-    const { rows: subscribers } = await pool.query<Subscriber>(
-      `SELECT chat_id
-       FROM release_subscribers
-       WHERE active = true
-         AND (
-           last_notified IS NULL
-           OR (last_notified AT TIME ZONE 'Europe/Moscow')::date
-              < (now() AT TIME ZONE 'Europe/Moscow')::date
-         )`
-    )
+    // Активные подписчики.
+    const { data: subscribers, error: subsError } = await supabase
+      .from('release_subscribers')
+      .select('chat_id, last_notified')
+      .eq('active', true)
 
-    if (subscribers.length === 0) {
+    if (subsError) throw subsError
+
+    // Оставляем только тех, кому не отправляли сегодня (по МСК).
+    const recipients = (subscribers ?? []).filter((s) => {
+      if (!s.last_notified) return true
+      const notifiedDate = new Date(s.last_notified)
+        .toISOString()
+        .slice(0, 10)
+      return notifiedDate !== todayISO
+    })
+
+    if (recipients.length === 0) {
       return res.status(200).json({
         ok: true,
-        message: 'Нет активных подписчиков для рассылки',
+        message: 'Нет активных подписчиков для рассылки (уже отправлено сегодня)',
         members: members.length,
         sent: 0,
       })
     }
 
     let sentCount = 0
+    const nowISO = new Date().toISOString()
 
-    for (const member of members) {
+    for (const member of members as BirthdayMember[]) {
       const isToday = member.birth_mmdd === todayMMDD
       const dateStr = formatBirthDate(member.birth_mmdd)
 
@@ -143,7 +157,7 @@ export default async function handler(
         ? `🎉 Сегодня, <b>${dateStr}</b>, день рождения у <b>${member.display_name}</b>! Поздравляем! 🎂`
         : `⏰ Через 2 дня, <b>${dateStr}</b>, день рождения у <b>${member.display_name}</b>. Не забудьте поздравить! 🎁`
 
-      for (const sub of subscribers) {
+      for (const sub of recipients) {
         try {
           const tgRes = await fetch(TG_API(token), {
             method: 'POST',
@@ -163,10 +177,10 @@ export default async function handler(
             )
             // Если бот заблокирован пользователем — деактивируем подписку.
             if (data?.error_code === 403) {
-              await pool.query(
-                `UPDATE release_subscribers SET active = false WHERE chat_id = $1`,
-                [sub.chat_id]
-              )
+              await supabase
+                .from('release_subscribers')
+                .update({ active: false, updated_at: nowISO })
+                .eq('chat_id', sub.chat_id)
             }
           } else {
             sentCount++
@@ -181,16 +195,22 @@ export default async function handler(
     }
 
     // Обновляем last_notified для всех активных подписчиков.
-    await pool.query(
-      `UPDATE release_subscribers SET last_notified = now() WHERE active = true`
-    )
+    const chatIds = recipients.map((s) => s.chat_id)
+    const { error: updateError } = await supabase
+      .from('release_subscribers')
+      .update({ last_notified: nowISO, updated_at: nowISO })
+      .in('chat_id', chatIds)
+
+    if (updateError) {
+      console.error('[birthday-check] failed to update last_notified:', updateError)
+    }
 
     return res.status(200).json({
       ok: true,
       today: todayMMDD,
       inTwoDays: inTwoDaysMMDD,
       members: members.length,
-      subscribers: subscribers.length,
+      subscribers: recipients.length,
       sent: sentCount,
     })
   } catch (err) {
