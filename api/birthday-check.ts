@@ -20,18 +20,21 @@ const TG_API = (token: string) =>
   `https://api.telegram.org/bot${token}/sendMessage`
 
 /**
- * Возвращает дату в формате MM.DD для часового пояса Европы/Москва (UTC+3).
+ * Возвращает дату в формате DD.MM для часового пояса Европы/Москва (UTC+3).
  * offsetDays — сдвиг в днях от сегодня.
+ *
+ * ВАЖНО: в БД (members.birth_mmdd) даты хранятся в формате DD.MM
+ * (см. админку AdminMembersPage — лейбл «Дата рождения (DD.MM)»).
  */
-function getMoscowMMDD(offsetDays = 0): string {
+function getMoscowDDMM(offsetDays = 0): string {
   const MSK_OFFSET = 3 * 60 * 60 * 1000
   const now = new Date()
   const moscow = new Date(
     now.getTime() + MSK_OFFSET + offsetDays * 24 * 60 * 60 * 1000
   )
-  const mm = String(moscow.getUTCMonth() + 1).padStart(2, '0')
   const dd = String(moscow.getUTCDate()).padStart(2, '0')
-  return `${mm}.${dd}`
+  const mm = String(moscow.getUTCMonth() + 1).padStart(2, '0')
+  return `${dd}.${mm}`
 }
 
 /** Возвращает сегодняшнюю дату в МСК в ISO формате (YYYY-MM-DD). */
@@ -57,12 +60,12 @@ const MONTHS_GENITIVE = [
   'декабря',
 ]
 
-/** Превращает MM.DD в читаемую строку, например «7 декабря». */
-function formatBirthDate(mmdd: string): string {
-  const [mm, dd] = mmdd.split('.')
+/** Превращает DD.MM в читаемую строку, например «7 декабря». */
+function formatBirthDate(ddmm: string): string {
+  const [dd, mm] = ddmm.split('.')
   const day = parseInt(dd ?? '0', 10)
   const monthIdx = parseInt(mm ?? '0', 10) - 1
-  if (!day || monthIdx < 0 || monthIdx > 11) return mmdd
+  if (!day || monthIdx < 0 || monthIdx > 11) return ddmm
   return `${day} ${MONTHS_GENITIVE[monthIdx]}`
 }
 
@@ -81,7 +84,7 @@ interface Subscriber {
  * Вызывается GitHub Actions / cron'ом раз в день.
  *
  * Логика:
- *   1. Берём сегодняшнюю дату (МСК) и дату +2 дня в формате MM.DD.
+ *   1. Берём сегодняшнюю дату (МСК) и дату +2 дня в формате DD.MM.
  *   2. Запрашиваем из БД участников, у которых birth_mmdd совпадает.
  *   3. Рассылаем напоминания всем активным подписчикам,
  *      которым ещё не отправляли сегодня.
@@ -108,8 +111,8 @@ export default async function handler(
     }
   }
 
-  const todayMMDD = getMoscowMMDD(0)
-  const inTwoDaysMMDD = getMoscowMMDD(2)
+  const todayDDMM = getMoscowDDMM(0)
+  const inTwoDaysDDMM = getMoscowDDMM(2)
   const todayISO = getMoscowTodayISO()
 
   let supabase
@@ -125,7 +128,7 @@ export default async function handler(
     const { data: members, error: membersError } = await supabase
       .from('members')
       .select('display_name, birth_mmdd')
-      .in('birth_mmdd', [todayMMDD, inTwoDaysMMDD])
+      .in('birth_mmdd', [todayDDMM, inTwoDaysDDMM])
       .eq('is_published', true)
 
     if (membersError) throw membersError
@@ -134,8 +137,8 @@ export default async function handler(
       return res.status(200).json({
         ok: true,
         message: 'Нет дней рождения сегодня или через 2 дня',
-        today: todayMMDD,
-        inTwoDays: inTwoDaysMMDD,
+        today: todayDDMM,
+        inTwoDays: inTwoDaysDDMM,
         members: 0,
         sent: 0,
       })
@@ -171,7 +174,7 @@ export default async function handler(
     const nowISO = new Date().toISOString()
 
     for (const member of members as BirthdayMember[]) {
-      const isToday = member.birth_mmdd === todayMMDD
+      const isToday = member.birth_mmdd === todayDDMM
       const dateStr = formatBirthDate(member.birth_mmdd)
 
       const text = isToday
@@ -228,8 +231,8 @@ export default async function handler(
 
     return res.status(200).json({
       ok: true,
-      today: todayMMDD,
-      inTwoDays: inTwoDaysMMDD,
+      today: todayDDMM,
+      inTwoDays: inTwoDaysDDMM,
       members: members.length,
       subscribers: recipients.length,
       sent: sentCount,
