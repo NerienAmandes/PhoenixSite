@@ -1,9 +1,34 @@
 import type { Release } from '../types'
 
-const cover = (seed: string, hue: number) =>
-  `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=${encodeURIComponent(
+type CoverSize =
+  | 'square_hd'
+  | 'square'
+  | 'portrait_4_3'
+  | 'portrait_16_9'
+  | 'landscape_4_3'
+  | 'landscape_16_9'
+
+/**
+ * Генерирует URL обложки трека. Чтобы релизы не выглядели одинаково, у каждого
+ * трека свой промпт под настроение / жанр и (опционально) свой размер полотна.
+ *
+ *   prompt — полный кастомный промпт; если не задан, берётся дефолтный фирменный
+ *   size   — пропорции картинки (по умолчанию square_hd, как у стримингов)
+ *   extra  — хвост промпта, чтобы добавить пару акцентов (текстура, свет и т.п.)
+ */
+const cover = (
+  seed: string,
+  opts: { prompt?: string; size?: CoverSize; extra?: string } = {}
+) => {
+  const { prompt, size = 'square_hd', extra } = opts
+  const base =
+    prompt ??
     `Album cover art for a cover band called FirePhoenix, abstract fire, vinyl record vibe, dark moody with warm orange and red accents, song title ${seed}, cinematic, 4k`
-  )}&image_size=square_hd`
+  const finalPrompt = extra ? `${base}, ${extra}` : base
+  return `https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=${encodeURIComponent(
+    finalPrompt
+  )}&image_size=${size}`
+}
 
 // Заглушки предстоящих релизов — заполни вручную (название, дату, ссылки, описание)
 // currentStage: 0..11 — номер текущего этапа (0 = Текст готов ещё не сделан)
@@ -24,7 +49,12 @@ export const upcomingReleases: Release[] = [
     id: 'u1',
     title: 'I Really Want to Stay At Your House',
     originalArtist: "Rosa Walton (Let's Eat Grandma)",
-    cover: cover('I Really Want to Stay At Your House', 60),
+    cover: cover('I Really Want to Stay At Your House', {
+      prompt:
+        "Synthwave album cover for a cyberpunk love ballad, neon-lit cityscape seen through a rainy window at night, deep magenta and electric cyan glow, silhouette of a person sitting on a rooftop, retro-futuristic aesthetic, lo-fi synth vibes, 4k cinematic still",
+      size: 'square_hd',
+      extra: 'soft film grain, gentle bokeh lights',
+    }),
     releaseDate: '2026-09-01',
     status: 'upcoming',
     platforms: {
@@ -38,7 +68,12 @@ export const upcomingReleases: Release[] = [
     id: 'u2',
     title: 'Back to Life',
     originalArtist: 'HAN',
-    cover: cover('Back to Life', 100),
+    cover: cover('Back to Life', {
+      prompt:
+        "Anime-style emotional ballad album cover, lone girl silhouette against falling cherry blossom petals, soft pastel pink and ivory sky at golden hour, hand-painted watercolor mood, gentle wind, hopeful and tender atmosphere, 4k cinematic illustration",
+      size: 'portrait_4_3',
+      extra: 'subtle paper texture, dreamy soft light',
+    }),
     releaseDate: '2026-10-01',
     status: 'upcoming',
     platforms: {
@@ -52,7 +87,12 @@ export const upcomingReleases: Release[] = [
     id: 'u3',
     title: 'Catch',
     originalArtist: 'Yena',
-    cover: cover('Catch', 140),
+    cover: cover('Catch', {
+      prompt:
+        "K-pop bright pop album cover, playful candy-colored gradient background (peach, lavender, mint), floating glitter and stars, cute Y2K aesthetic, glossy 3D render, energetic and cheerful vibe, 4k",
+      size: 'square_hd',
+      extra: 'holographic foil highlights, sparkles',
+    }),
     releaseDate: '2026-11-01',
     status: 'upcoming',
     platforms: {
@@ -66,7 +106,12 @@ export const upcomingReleases: Release[] = [
     id: 'u4',
     title: 'Test me!',
     originalArtist: 'Xdinary Heroes',
-    cover: cover('Test me!', 200),
+    cover: cover('Test me!', {
+      prompt:
+        "Aggressive rock album cover, cracked concrete wall splattered with black and crimson paint, electric lightning bolts cutting through smoke, distorted microphone silhouette, raw and rebellious energy, grunge textures, 4k cinematic",
+      size: 'square_hd',
+      extra: 'high contrast, motion blur on lightning',
+    }),
     releaseDate: '2026-12-01',
     status: 'upcoming',
     platforms: {
@@ -80,7 +125,12 @@ export const upcomingReleases: Release[] = [
     id: 'u5',
     title: 'Candy Scar (Zombie Stage ROUND 1)',
     originalArtist: 'VIVINOS / Rubyeye · C!naH',
-    cover: cover('Candy Scar Zombie Stage Round 1', 320),
+    cover: cover('Candy Scar Zombie Stage', {
+      prompt:
+        "Dark anime gothic album cover, two opposing silhouettes back-to-back under a blood-red moon, black roses and broken glass shards, dramatic chiaroscuro lighting, theatrical and ominous mood, 4k cinematic illustration",
+      size: 'portrait_4_3',
+      extra: 'matte painting look, deep shadows, faint embers',
+    }),
     releaseDate: '2027-01-15',
     status: 'upcoming',
     platforms: {
@@ -94,7 +144,12 @@ export const upcomingReleases: Release[] = [
     id: 'u6',
     title: 'Shadow Shadow',
     originalArtist: 'Project Sekai',
-    cover: cover('Shadow Shadow Project Sekai', 360),
+    cover: cover('Shadow Shadow Project Sekai', {
+      prompt:
+        "Vocaloid-inspired album cover, two overlapping mirror silhouettes in a digital void, glitching cyan and deep indigo pixels, floating holographic particles, mysterious and ethereal mood, 4k digital art",
+      size: 'square_hd',
+      extra: 'scanlines, soft chromatic aberration',
+    }),
     releaseDate: '2027-03-01',
     status: 'upcoming',
     platforms: {},
@@ -112,7 +167,12 @@ export const releases: Release[] = [
     id: 'r4',
     title: 'Не Отпускай',
     originalArtist: 'Adele — Rolling in the Deep',
-    cover: cover('Не Отпускай', 90),
+    cover: cover('Не Отпускай', {
+      prompt:
+        "Powerful soul ballad album cover, dramatic dark background with a single spotlight, swirling black smoke and a vintage microphone silhouette, deep navy and ember orange palette, cinematic opera mood, 4k photo-realistic",
+      size: 'square_hd',
+      extra: 'soft volumetric light, fine film grain',
+    }),
     releaseDate: '2026-04-04',
     status: 'released',
     platforms: {
@@ -129,7 +189,12 @@ export const releases: Release[] = [
     id: 'r5',
     title: 'Танец На Краю',
     originalArtist: 'Dua Lipa — Levitating',
-    cover: cover('Танец На Краю', 120),
+    cover: cover('Танец На Краю', {
+      prompt:
+        "Retro-futuristic disco pop album cover, mirrorball scattering light beams across a chrome dance floor, neon pink and electric blue, model silhouette mid-dance, 80s synthwave meets modern pop, 4k glossy render",
+      size: 'square_hd',
+      extra: 'lens flares, polished metallic reflections',
+    }),
     releaseDate: '2026-02-14',
     status: 'released',
     platforms: {
@@ -145,7 +210,12 @@ export const releases: Release[] = [
     id: 'r6',
     title: 'Мы Выше',
     originalArtist: 'Coldplay — Fix You',
-    cover: cover('Мы Выше', 150),
+    cover: cover('Мы Выше', {
+      prompt:
+        "Emotional uplifting rock ballad album cover, vast open sky at golden sunset, warm amber and rose clouds, lone figure with arms slightly raised, light rays breaking through clouds, hopeful and cinematic, 4k photo-realistic",
+      size: 'landscape_4_3',
+      extra: 'soft halation, gentle lens bloom',
+    }),
     releaseDate: '2025-11-30',
     status: 'released',
     platforms: {
@@ -161,7 +231,12 @@ export const releases: Release[] = [
     id: 'r7',
     title: 'Шёпот Ливня',
     originalArtist: 'Lana Del Rey — Summertime Sadness',
-    cover: cover('Шёпот Ливня', 180),
+    cover: cover('Шёпот Ливня', {
+      prompt:
+        "Dreamy indie album cover, vintage car under heavy rain at twilight, faded cyanotype and dusty rose tones, old film grain, melancholic and nostalgic atmosphere, soft focus on raindrops on glass, 4k cinematic still",
+      size: 'portrait_4_3',
+      extra: 'light leaks, muted pastel grading',
+    }),
     releaseDate: '2025-08-19',
     status: 'released',
     platforms: {
@@ -176,7 +251,12 @@ export const releases: Release[] = [
     id: 'r8',
     title: 'Полымя',
     originalArtist: 'Imagine Dragons — Radioactive',
-    cover: cover('Полымя', 210),
+    cover: cover('Полымя', {
+      prompt:
+        "Epic alt-rock album cover, ancient ritual circle of flames in a ruined industrial hall, embers floating into thick smoke, deep crimson and charcoal palette, dramatic rim light, cinematic and powerful, 4k dark fantasy",
+      size: 'square_hd',
+      extra: 'heavy smoke, glowing ash particles, vignette',
+    }),
     releaseDate: '2025-04-05',
     status: 'released',
     platforms: {

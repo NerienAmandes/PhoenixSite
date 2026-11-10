@@ -106,7 +106,8 @@ export default function JoinPage() {
         Ищем
         <br />
         <span className="text-fire">единомышленников</span>
-      </h1>
+      </h1>SUPABASE_DATABASE_URL=postgresql://postgres:ваш_пароль@db.xxxx.supabase.co:5432/postgres
+CRON_SECRET=любая_длинная_случайная_строка
       <p className="reveal reveal-3 mt-6 max-w-2xl text-lg text-muted">
         Мы всегда рады новым фениксам в нашей команде! Присоединяйся!
 Мы ищем: вокалистов, текстовиков, тюнотаймеров, звукарей, художников, виддеров и ребят в отдел медиа.
