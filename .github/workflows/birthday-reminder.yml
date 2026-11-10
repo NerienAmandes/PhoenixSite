@@ -15,9 +15,17 @@ jobs:
     steps:
       - name: Call birthday-check endpoint
         run: |
+          # При ручном запуске добавляем ?manual=1 — бот пришлёт список ближайших ДР.
+          # По крону — обычный режим (сегодня + через 2 дня).
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            URL="${{ secrets.BIRTHDAY_CHECK_URL }}?manual=1"
+          else
+            URL="${{ secrets.BIRTHDAY_CHECK_URL }}"
+          fi
+
           RESPONSE=$(curl -s -w "\n%{http_code}" \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.BIRTHDAY_CHECK_URL }}")
+            "$URL")
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
           BODY=$(echo "$RESPONSE" | sed '$d')

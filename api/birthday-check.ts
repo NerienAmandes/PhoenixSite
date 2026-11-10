@@ -69,14 +69,190 @@ function formatBirthDate(ddmm: string): string {
   return `${day} ${MONTHS_GENITIVE[monthIdx]}`
 }
 
+/**
+ * Вычисляет количество дней до ближайшего дня рождения в формате DD.MM.
+ * Если ДР уже прошло в этом году — берётся следующий год.
+ * Возвращает 0, если ДР сегодня.
+ */
+function daysUntilBirthday(ddmm: string): number | null {
+  const [dd, mm] = ddmm.split('.')
+  const day = parseInt(dd ?? '0', 10)
+  const month = parseInt(mm ?? '0', 10)
+  if (!day || month < 1 || month > 12) return null
+
+  const MSK_OFFSET = 3 * 60 * 60 * 1000
+  const now = new Date()
+  const today = new Date(now.getTime() + MSK_OFFSET)
+  const todayYear = today.getUTCFullYear()
+  const todayMonth = today.getUTCMonth() + 1
+  const todayDay = today.getUTCDate()
+
+  // ДР в текущем году.
+  let birthYear = todayYear
+  if (
+    month < todayMonth ||
+    (month === todayMonth && day < todayDay)
+  ) {
+    birthYear = todayYear + 1
+  }
+
+  const birthDate = new Date(Date.UTC(birthYear, month - 1, day))
+  const todayDate = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay))
+  const diffMs = birthDate.getTime() - todayDate.getTime()
+  return Math.round(diffMs / (24 * 60 * 60 * 1000))
+}
+
 interface BirthdayMember {
   display_name: string
   birth_mmdd: string
 }
 
+interface MemberWithDays extends BirthdayMember {
+  daysUntil: number
+}
+
 interface Subscriber {
   chat_id: number
   last_notified: string | null
+}
+
+/**
+ * Режим ручного запуска: находит ближайшие дни рождения и рассылает список.
+ * Показывает все ДР в ближайшие 30 дней; если никого нет — ближайший вообще.
+ */
+async function handleManualMode(
+  supabase: ReturnType<typeof makeServiceClient>,
+  token: string,
+  recipients: Subscriber[],
+  todayISO: string,
+  res: VercelResponse
+) {
+  // Берём всех опубликованных участников с заполненной датой рождения.
+  const { data: allMembers, error: membersError } = await supabase
+    .from('members')
+    .select('display_name, birth_mmdd')
+    .eq('is_published', true)
+    .not('birth_mmdd', 'is', null)
+
+  if (membersError) throw membersError
+
+  const withDays: MemberWithDays[] = (allMembers ?? [])
+    .map((m) => {
+      const daysUntil = daysUntilBirthday(m.birth_mmdd)
+      return daysUntil === null ? null : { ...m, daysUntil }
+    })
+    .filter((m): m is MemberWithDays => m !== null)
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+
+  if (withDays.length === 0) {
+    return res.status(200).json({
+      ok: true,
+      mode: 'manual',
+      message: 'В БД нет участников с заполненной датой рождения',
+      members: 0,
+      sent: 0,
+    })
+  }
+
+  // Берём все ДР в ближайшие 30 дней. Если таких нет — ближайшего.
+  const WINDOW_DAYS = 30
+  let upcoming = withDays.filter((m) => m.daysUntil <= WINDOW_DAYS)
+  if (upcoming.length === 0) {
+    upcoming = [withDays[0]!]
+  }
+
+  const todayDDMM = getMoscowDDMM(0)
+  const lines: string[] = ['🎂 <b>Ближайшие дни рождения:</b>', '']
+
+  for (const m of upcoming) {
+    const dateStr = formatBirthDate(m.birth_mmdd)
+    let when: string
+    if (m.daysUntil === 0) {
+      when = '🎉 <b>сегодня</b>'
+    } else if (m.daysUntil === 1) {
+      when = '⏰ <b>завтра</b>'
+    } else {
+      when = `через <b>${m.daysUntil}</b> дн.`
+    }
+    lines.push(`• <b>${m.display_name}</b> — ${dateStr} (${when})`)
+  }
+
+  // Если ближайшие ДР дальше 30 дней — добавляем пометку.
+  if (withDays[0]!.daysUntil > WINDOW_DAYS) {
+    lines.push('')
+    lines.push(
+      `ℹ️ В ближайшие ${WINDOW_DAYS} дней дней рождения нет, показан ближайший.`
+    )
+  }
+
+  const text = lines.join('\n')
+
+  if (recipients.length === 0) {
+    return res.status(200).json({
+      ok: true,
+      mode: 'manual',
+      message: 'Нет активных подписчиков для рассылки',
+      members: upcoming.length,
+      sent: 0,
+    })
+  }
+
+  let sentCount = 0
+  const nowISO = new Date().toISOString()
+
+  for (const sub of recipients) {
+    try {
+      const tgRes = await fetch(TG_API(token), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: sub.chat_id,
+          text,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        }),
+      })
+      if (!tgRes.ok) {
+        const data = await tgRes.json().catch(() => ({}))
+        console.error(
+          `[birthday-check][manual] failed to send to ${sub.chat_id}:`,
+          data
+        )
+        if (data?.error_code === 403) {
+          await supabase
+            .from('release_subscribers')
+            .update({ active: false, updated_at: nowISO })
+            .eq('chat_id', sub.chat_id)
+        }
+      } else {
+        sentCount++
+      }
+    } catch (err) {
+      console.error(
+        `[birthday-check][manual] network error sending to ${sub.chat_id}:`,
+        err
+      )
+    }
+  }
+
+  const chatIds = recipients.map((s) => s.chat_id)
+  const { error: updateError } = await supabase
+    .from('release_subscribers')
+    .update({ last_notified: nowISO, updated_at: nowISO })
+    .in('chat_id', chatIds)
+
+  if (updateError) {
+    console.error('[birthday-check][manual] failed to update last_notified:', updateError)
+  }
+
+  return res.status(200).json({
+    ok: true,
+    mode: 'manual',
+    today: todayDDMM,
+    members: upcoming.length,
+    subscribers: recipients.length,
+    sent: sentCount,
+  })
 }
 
 /**
@@ -88,6 +264,10 @@ interface Subscriber {
  *   2. Запрашиваем из БД участников, у которых birth_mmdd совпадает.
  *   3. Рассылаем напоминания всем активным подписчикам,
  *      которым ещё не отправляли сегодня.
+ *
+ * Режимы:
+ *   - по умолчанию (cron): ДР сегодня или через 2 дня.
+ *   - ?manual=1 (ручной запуск): список ближайших ДР (до 30 дней).
  */
 export default async function handler(
   req: VercelRequest,
@@ -111,6 +291,10 @@ export default async function handler(
     }
   }
 
+  // Режим ручного запуска: показать ближайшие дни рождения
+  // (включая пропущенные окна напоминаний). Включается query-параметром ?manual=1.
+  const isManual = req.query.manual === '1' || req.query.manual === 'true'
+
   const todayDDMM = getMoscowDDMM(0)
   const inTwoDaysDDMM = getMoscowDDMM(2)
   const todayISO = getMoscowTodayISO()
@@ -124,6 +308,30 @@ export default async function handler(
   }
 
   try {
+    // Активные подписчики (нужны в обоих режимах).
+    const { data: subscribers, error: subsError } = await supabase
+      .from('release_subscribers')
+      .select('chat_id, last_notified')
+      .eq('active', true)
+
+    if (subsError) throw subsError
+
+    // Оставляем только тех, кому не отправляли сегодня (по МСК).
+    const recipients = (subscribers ?? []).filter((s) => {
+      if (!s.last_notified) return true
+      const notifiedDate = new Date(s.last_notified)
+        .toISOString()
+        .slice(0, 10)
+      return notifiedDate !== todayISO
+    })
+
+    // ── Режим ручного запуска: ближайшие дни рождения ──────────────
+    if (isManual) {
+      return await handleManualMode(supabase, token, recipients, todayISO, res)
+    }
+
+    // ── Обычный режим (cron): ДР сегодня или через 2 дня ────────────
+
     // Участники, у кого ДР сегодня или через 2 дня.
     const { data: members, error: membersError } = await supabase
       .from('members')
@@ -143,23 +351,6 @@ export default async function handler(
         sent: 0,
       })
     }
-
-    // Активные подписчики.
-    const { data: subscribers, error: subsError } = await supabase
-      .from('release_subscribers')
-      .select('chat_id, last_notified')
-      .eq('active', true)
-
-    if (subsError) throw subsError
-
-    // Оставляем только тех, кому не отправляли сегодня (по МСК).
-    const recipients = (subscribers ?? []).filter((s) => {
-      if (!s.last_notified) return true
-      const notifiedDate = new Date(s.last_notified)
-        .toISOString()
-        .slice(0, 10)
-      return notifiedDate !== todayISO
-    })
 
     if (recipients.length === 0) {
       return res.status(200).json({
