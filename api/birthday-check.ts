@@ -95,7 +95,7 @@ export default async function handler(
 
   if (!token) {
     console.error('[birthday-check] TELEGRAM_BOT_TOKEN not set')
-    return res.status(200).json({ ok: false, error: 'Server is not configured' })
+    return res.status(500).json({ ok: false, error: 'TELEGRAM_BOT_TOKEN is missing' })
   }
 
   // Защита endpoint'а секретным ключом (если задан в окружении).
@@ -117,7 +117,7 @@ export default async function handler(
     supabase = makeServiceClient()
   } catch (err) {
     console.error('[birthday-check]', err)
-    return res.status(200).json({ ok: false, error: 'Supabase not configured' })
+    return res.status(500).json({ ok: false, error: 'Supabase not configured' })
   }
 
   try {
@@ -236,6 +236,6 @@ export default async function handler(
     })
   } catch (err) {
     console.error('[birthday-check] error:', err)
-    return res.status(200).json({ ok: false, error: 'Internal error' })
+    return res.status(500).json({ ok: false, error: 'Internal error' })
   }
 }

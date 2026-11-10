@@ -29,3 +29,21 @@ jobs:
             echo "::error::Birthday check failed with HTTP $HTTP_CODE"
             exit 1
           fi
+
+          # Парсим JSON и проверяем поле ok.
+          OK=$(echo "$BODY" | jq -r '.ok // false')
+          if [ "$OK" != "true" ]; then
+            ERROR=$(echo "$BODY" | jq -r '.error // "unknown error"')
+            echo "::error::Birthday check returned ok=false: $ERROR"
+            exit 1
+          fi
+
+          # Диагностика: сколько участников найдено и сколько сообщений отправлено.
+          MEMBERS=$(echo "$BODY" | jq -r '.members // 0')
+          SENT=$(echo "$BODY" | jq -r '.sent // 0')
+          SUBSCRIBERS=$(echo "$BODY" | jq -r '.subscribers // 0')
+          echo "members=$MEMBERS subscribers=$SUBSCRIBERS sent=$SENT"
+
+          if [ "$MEMBERS" -gt 0 ] && [ "$SENT" -eq 0 ]; then
+            echo "::warning::Найдены именинники ($MEMBERS), но отправлено 0 сообщений. Возможно, нет активных подписчиков (subscribers=$SUBSCRIBERS) — подпишитесь через /start в боте."
+          fi
